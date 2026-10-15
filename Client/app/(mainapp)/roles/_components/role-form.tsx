@@ -139,7 +139,7 @@ export function RoleForm({ role }: RoleFormProps) {
         <Input
           id="role-name"
           placeholder="e.g. Manager"
-          className="h-11 rounded-xl"
+          className="h-11 rounded-lg"
           disabled={isPending || (isEdit && role?.isSystem)}
           {...form.register("name")}
         />
@@ -165,7 +165,7 @@ export function RoleForm({ role }: RoleFormProps) {
         <Input
           id="role-desc"
           placeholder="Short description of what this role can do"
-          className="h-11 rounded-xl"
+          className="h-11 rounded-lg"
           disabled={isPending}
           {...form.register("description")}
         />
@@ -179,7 +179,7 @@ export function RoleForm({ role }: RoleFormProps) {
       {/* Permission matrix */}
       <div className="space-y-2">
         <Label>Permissions</Label>
-        <div className="overflow-hidden rounded-xl border border-border/60">
+        <div className="overflow-hidden rounded-lg border border-border/60">
           {/* Header row */}
           <div className="grid grid-cols-[1fr_repeat(4,_64px)] border-b border-border/60 bg-muted/50 px-4 py-2.5 text-xs font-semibold text-muted-foreground">
             <span>Resource</span>
@@ -252,7 +252,7 @@ export function RoleForm({ role }: RoleFormProps) {
       </div>
 
       {errors.root?.serverError && (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
           {errors.root.serverError.message}
         </div>
       )}

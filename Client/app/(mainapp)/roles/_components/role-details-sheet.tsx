@@ -72,7 +72,7 @@ export function RoleDetailsSheet({ role, onClose }: RoleDetailsSheetProps) {
                   No permissions assigned.
                 </p>
               ) : (
-                <div className="overflow-hidden rounded-xl border border-border/60">
+                <div className="overflow-hidden rounded-lg border border-border/60">
                   {role.permissions.map((perm, i) => (
                     <div
                       key={perm.resource}

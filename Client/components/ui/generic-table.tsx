@@ -351,7 +351,7 @@ export default function GenericTable<TData, TValue>({
           {customFilterComponent}
         </div>
       </div>
-      <div className="overflow-hidden rounded-xl border border-border/80 bg-card/60 shadow-sm backdrop-blur-xs">
+      <div className="overflow-hidden rounded-lg border border-border/80 bg-card shadow-sm">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

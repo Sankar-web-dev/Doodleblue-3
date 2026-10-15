@@ -24,11 +24,11 @@ export function SidebarUserFooter({ user: initialUser }: { user: AuthUser }) {
   const imageUrl = user.image && !imgFailed ? user.image : null;
 
   return (
-    <SidebarFooter className="mt-auto border-t border-sidebar-border px-4 py-4 group-data-[collapsible=icon]:p-2">
+    <SidebarFooter className="mt-auto border-t border-sidebar-border/60 px-3 py-3 group-data-[collapsible=icon]:p-2">
       <Link
         href="/profile"
         title="View profile"
-        className="mb-2 flex items-center gap-3 rounded-xl border border-sidebar-border/60 bg-sidebar-accent/40 p-2.5 transition-all hover:bg-sidebar-accent/80 hover:border-sidebar-border group-data-[collapsible=icon]:p-1.5 group-data-[collapsible=icon]:justify-center"
+        className="mb-2 flex items-center gap-3 rounded-lg border border-sidebar-border/50 bg-sidebar-accent/50 p-2.5 transition-all hover:bg-sidebar-accent group-data-[collapsible=icon]:border-transparent group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-1.5 group-data-[collapsible=icon]:justify-center"
       >
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -36,30 +36,32 @@ export function SidebarUserFooter({ user: initialUser }: { user: AuthUser }) {
             src={imageUrl}
             alt={user.name}
             title={user.name}
-            className="h-10 w-10 shrink-0 rounded-full border border-primary/30 object-cover"
+            className="h-9 w-9 shrink-0 rounded-lg border border-sidebar-primary/40 object-cover"
             onError={() => setImgFailed(true)}
           />
         ) : (
           <div
             title={user.name}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/20 text-sm font-bold text-primary"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary/20 text-sm font-bold text-sidebar-primary"
           >
             {initials(user.name)}
           </div>
         )}
         <div className="min-w-0 group-data-[collapsible=icon]:hidden">
-          <p className="truncate text-sm font-semibold hover:underline">{user.name}</p>
-          <p className="truncate text-xs text-muted-foreground">
+          <p className="truncate text-sm font-semibold text-sidebar-foreground hover:underline">
+            {user.name}
+          </p>
+          <p className="truncate text-xs text-sidebar-foreground/50">
             {user.email}
           </p>
         </div>
       </Link>
-      <div className="flex flex-col gap-2 group-data-[collapsible=icon]:items-center">
+      <div className="flex items-center gap-2 group-data-[collapsible=icon]:flex-col">
         <Badge
           className={
             isSuper
-              ? "border-transparent bg-primary text-primary-foreground shadow-sm shadow-primary/25 group-data-[collapsible=icon]:p-1.5"
-              : "border-border bg-secondary text-secondary-foreground group-data-[collapsible=icon]:p-1.5"
+              ? "border-transparent bg-sidebar-primary text-sidebar-primary-foreground group-data-[collapsible=icon]:p-1.5"
+              : "border-sidebar-border bg-sidebar-accent text-sidebar-accent-foreground group-data-[collapsible=icon]:p-1.5"
           }
         >
           <RoleIcon className="h-3.5 w-3.5" />
@@ -68,10 +70,9 @@ export function SidebarUserFooter({ user: initialUser }: { user: AuthUser }) {
           </span>
         </Badge>
         <LogoutButton
-          showIcon
           title="Log out"
-          className="w-full justify-start group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0 [&>span]:group-data-[collapsible=icon]:hidden [&>svg]:group-data-[collapsible=icon]:mr-0"
-          variant="outline"
+          className="h-8 flex-1 justify-start text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0 [&>span]:group-data-[collapsible=icon]:hidden [&>svg]:group-data-[collapsible=icon]:mr-0"
+          variant="ghost"
           size="sm"
         />
       </div>

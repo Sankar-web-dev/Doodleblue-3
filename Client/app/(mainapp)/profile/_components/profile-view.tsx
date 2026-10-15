@@ -46,7 +46,7 @@ export function ProfileView() {
     <div className="max-w-4xl mx-auto space-y-6 pb-10">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">My Profile</h1>
+        <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">My Profile</h1>
         <p className="text-sm text-muted-foreground">
           View your account information and manage your credentials.
         </p>
@@ -113,28 +113,28 @@ export function ProfileView() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1 rounded-xl border border-border/60 bg-muted/20 p-3.5">
+                <div className="space-y-1 rounded-lg border border-border/60 bg-muted/20 p-3.5">
                   <span className="text-xs text-muted-foreground flex items-center gap-1.5">
                     <UserIcon className="h-3.5 w-3.5" /> Full Name
                   </span>
                   <p className="text-sm font-medium text-foreground">{user.name}</p>
                 </div>
 
-                <div className="space-y-1 rounded-xl border border-border/60 bg-muted/20 p-3.5">
+                <div className="space-y-1 rounded-lg border border-border/60 bg-muted/20 p-3.5">
                   <span className="text-xs text-muted-foreground flex items-center gap-1.5">
                     <Mail className="h-3.5 w-3.5" /> Email Address
                   </span>
                   <p className="text-sm font-medium text-foreground">{user.email}</p>
                 </div>
 
-                <div className="space-y-1 rounded-xl border border-border/60 bg-muted/20 p-3.5">
+                <div className="space-y-1 rounded-lg border border-border/60 bg-muted/20 p-3.5">
                   <span className="text-xs text-muted-foreground flex items-center gap-1.5">
                     <ShieldCheck className="h-3.5 w-3.5" /> Assigned Role
                   </span>
                   <p className="text-sm font-medium text-foreground">{getRoleLabel(user.role)}</p>
                 </div>
 
-                <div className="space-y-1 rounded-xl border border-border/60 bg-muted/20 p-3.5">
+                <div className="space-y-1 rounded-lg border border-border/60 bg-muted/20 p-3.5">
                   <span className="text-xs text-muted-foreground flex items-center gap-1.5">
                     <KeyRound className="h-3.5 w-3.5" /> Password Status
                   </span>

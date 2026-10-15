@@ -222,7 +222,7 @@ export function UserForm({ user }: UserFormProps) {
         <Input
           id="user-name"
           placeholder="e.g. Jane Doe"
-          className="h-11 rounded-xl"
+          className="h-11 rounded-lg"
           value={name}
           onChange={(e) => setName(e.target.value)}
           disabled={isPending}
@@ -236,7 +236,7 @@ export function UserForm({ user }: UserFormProps) {
           id="user-email"
           type="email"
           placeholder="e.g. user@example.com"
-          className="h-11 rounded-xl"
+          className="h-11 rounded-lg"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           disabled={isPending}
@@ -268,7 +268,7 @@ export function UserForm({ user }: UserFormProps) {
               id="user-password"
               type={showPassword ? "text" : "password"}
               placeholder="Leave blank to keep unchanged"
-              className="h-11 rounded-xl pr-10 font-mono text-sm"
+              className="h-11 rounded-lg pr-10 font-mono text-sm"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={isPending}
@@ -292,7 +292,7 @@ export function UserForm({ user }: UserFormProps) {
           </p>
         </div>
       ) : (
-        <div className="flex items-start gap-2.5 rounded-xl border border-border/60 bg-muted/30 px-4 py-3">
+        <div className="flex items-start gap-2.5 rounded-lg border border-border/60 bg-muted/30 px-4 py-3">
           <Mail className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
           <p className="text-xs leading-relaxed text-muted-foreground">
             Login credentials are generated automatically and emailed to the
@@ -306,7 +306,7 @@ export function UserForm({ user }: UserFormProps) {
       <div className="space-y-2">
         <Label htmlFor="role-select">Assigned Role</Label>
         {isSuperAdmin ? (
-          <div className="flex h-11 items-center rounded-xl border border-border/70 bg-muted/30 px-3.5 text-sm">
+          <div className="flex h-11 items-center rounded-lg border border-border/70 bg-muted/30 px-3.5 text-sm">
             <span className="font-medium text-foreground">SUPER_ADMIN</span>
             <Badge variant="secondary" className="ml-2 text-[10px]">
               System (Locked)
@@ -321,7 +321,7 @@ export function UserForm({ user }: UserFormProps) {
             }}
             disabled={rolesLoading || isPending}
           >
-            <SelectTrigger id="role-select" className="h-11 rounded-xl w-full">
+            <SelectTrigger id="role-select" className="h-11 rounded-lg w-full">
               <SelectValue placeholder={rolesLoading ? "Loading roles..." : "Choose a role"}>
                 {selectedRole ? (
                   <span className="flex items-center gap-2">
@@ -357,7 +357,7 @@ export function UserForm({ user }: UserFormProps) {
 
       {/* Role preview: shows permissions granted by selected roleId */}
       {selectedRole && (
-        <div className="rounded-xl border border-border/70 bg-muted/30 p-4 space-y-3">
+        <div className="rounded-lg border border-border/70 bg-muted/30 p-4 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-primary" />
@@ -416,7 +416,7 @@ export function UserForm({ user }: UserFormProps) {
             onValueChange={(val) => setIsActive(val === "active")}
             disabled={isPending || isSuperAdmin}
           >
-            <SelectTrigger id="status-select" className="h-11 rounded-xl w-full">
+            <SelectTrigger id="status-select" className="h-11 rounded-lg w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -474,7 +474,7 @@ export function UserForm({ user }: UserFormProps) {
                 type="button"
                 variant="outline"
                 size="sm"
-                className="rounded-xl gap-2 text-xs h-9"
+                className="rounded-lg gap-2 text-xs h-9"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isPending}
               >
@@ -493,7 +493,7 @@ export function UserForm({ user }: UserFormProps) {
             <Input
               id="user-image"
               placeholder="Or paste image URL (e.g. /uploads/profiles/... or https://...)"
-              className="h-9 rounded-xl text-xs"
+              className="h-9 rounded-lg text-xs"
               value={image}
               onChange={(e) => setImage(e.target.value)}
               disabled={isPending}
@@ -504,7 +504,7 @@ export function UserForm({ user }: UserFormProps) {
 
       {/* Error display */}
       {error && (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
           {error}
         </div>
       )}

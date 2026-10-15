@@ -12,6 +12,9 @@ import {
   EyeOff,
   Loader2,
   ArrowRight,
+  ShieldCheck,
+  Users,
+  KeyRound,
 } from "lucide-react";
 
 import { authService, AUTH_ME_KEY, getRoleLabel } from "@/api/auth.api";
@@ -19,6 +22,24 @@ import { ApiRequestError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+const FEATURES = [
+  {
+    icon: ShieldCheck,
+    title: "Role-based access",
+    description: "Granular permission matrices for every role you create.",
+  },
+  {
+    icon: Users,
+    title: "User provisioning",
+    description: "Provision accounts with temporary credentials in seconds.",
+  },
+  {
+    icon: KeyRound,
+    title: "Secure sessions",
+    description: "HttpOnly session cookies with forced password rotation.",
+  },
+];
 
 export default function LoginPage() {
   const router = useRouter();
@@ -66,23 +87,83 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-ambient-mesh px-4 py-10 sm:px-8">
-      <div className="w-full max-w-md rounded-3xl border border-border/80 bg-card/90 p-8 shadow-xl backdrop-blur-md sm:p-10">
-          <div className="mb-8 flex flex-col items-center text-center">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/25">
-              <Layers className="h-7 w-7" />
+    <div className="flex min-h-screen w-full bg-background">
+      {/* Brand panel — visible on large screens */}
+      <aside className="relative hidden w-1/2 overflow-hidden lg:flex lg:flex-col lg:justify-between bg-[oklch(0.16_0.02_168)] p-12 text-white">
+        {/* Decorations */}
+        <div className="dot-grid pointer-events-none absolute inset-0 opacity-60" />
+        <div className="animate-drift pointer-events-none absolute -top-32 -right-32 h-96 w-96 rounded-full bg-[oklch(0.78_0.17_152/0.18)] blur-3xl" />
+        <div className="animate-drift pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-[oklch(0.62_0.10_195/0.15)] blur-3xl [animation-delay:-6s]" />
+
+        <div className="relative flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[oklch(0.78_0.17_152)] text-[oklch(0.15_0.035_168)] shadow-[0_0_24px_-4px] shadow-[oklch(0.78_0.17_152/0.6)]">
+            <Layers className="h-5 w-5" />
+          </div>
+          <span className="font-display text-lg font-bold tracking-tight">
+            DoodleBlue
+          </span>
+        </div>
+
+        <div className="relative max-w-md space-y-8">
+          <h1 className="font-display text-4xl font-bold leading-[1.1] tracking-tight xl:text-5xl">
+            Manage access
+            <br />
+            <span className="text-[oklch(0.78_0.17_152)]">with confidence.</span>
+          </h1>
+          <p className="text-sm leading-relaxed text-white/55">
+            A clean admin console for users, roles and permissions — everything
+            you need to control who can do what.
+          </p>
+
+          <ul className="space-y-5">
+            {FEATURES.map((f) => (
+              <li key={f.title} className="flex items-start gap-4">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5">
+                  <f.icon className="h-4 w-4 text-[oklch(0.78_0.17_152)]" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">{f.title}</p>
+                  <p className="text-xs leading-relaxed text-white/50">
+                    {f.description}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <p className="relative text-xs text-white/35">
+          DoodleBlue Admin Console
+        </p>
+      </aside>
+
+      {/* Form panel */}
+      <main className="relative flex flex-1 items-center justify-center bg-ambient-mesh px-4 py-10 sm:px-8">
+        <div className="w-full max-w-sm animate-fade-up">
+          {/* Mobile brand mark */}
+          <div className="mb-8 flex items-center gap-3 lg:hidden">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-md shadow-primary/30">
+              <Layers className="h-5 w-5" />
             </div>
-            <h2 className="text-2xl font-bold tracking-tight">
-              <span className="gradient-text">Welcome back</span>
+            <span className="font-display text-lg font-bold tracking-tight">
+              DoodleBlue
+            </span>
+          </div>
+
+          <div className="mb-8">
+            <h2 className="font-display text-3xl font-bold tracking-tight">
+              Welcome back
             </h2>
-            <p className="mt-1.5 text-sm text-muted-foreground">
+            <p className="mt-2 text-sm text-muted-foreground">
               Sign in to your account to continue
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5" noValidate>
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Email address</Label>
+              <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Email address
+              </Label>
               <div className="relative">
                 <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -90,7 +171,7 @@ export default function LoginPage() {
                   type="email"
                   autoComplete="email"
                   placeholder="you@example.com"
-                  className="h-11 rounded-xl pl-10 border-border/80 bg-background/50 focus-visible:ring-primary/40 focus-visible:border-primary"
+                  className="h-11 rounded-lg pl-10 focus-visible:ring-primary/30 focus-visible:border-primary"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={loginMutation.isPending}
@@ -99,7 +180,9 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Password</Label>
+              <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Password
+              </Label>
               <div className="relative">
                 <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -107,7 +190,7 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   placeholder="Enter your password"
-                  className="h-11 rounded-xl pl-10 pr-11 border-border/80 bg-background/50 focus-visible:ring-primary/40 focus-visible:border-primary"
+                  className="h-11 rounded-lg pl-10 pr-11 focus-visible:ring-primary/30 focus-visible:border-primary"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={loginMutation.isPending}
@@ -128,7 +211,7 @@ export default function LoginPage() {
             </div>
 
             {formError && (
-              <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
+              <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
                 {formError}
               </div>
             )}
@@ -136,7 +219,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               size="lg"
-              className="h-11 w-full bg-primary hover:bg-primary/85 text-primary-foreground shadow-md shadow-primary/25 transition-all"
+              className="h-11 w-full bg-primary text-primary-foreground shadow-md shadow-primary/30 hover:bg-primary/90"
               disabled={loginMutation.isPending}
             >
               {loginMutation.isPending ? (
@@ -153,10 +236,11 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-xs text-muted-foreground">
+          <p className="mt-8 text-center text-xs text-muted-foreground">
             Accounts are provisioned by your administrator.
           </p>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

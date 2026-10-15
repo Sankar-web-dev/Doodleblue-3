@@ -19,7 +19,7 @@ export function ForbiddenState({ message }: { message?: string }) {
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-destructive">
           403 &middot; Forbidden
         </p>
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+        <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
           Access denied
         </h1>
         <p className="mx-auto max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">

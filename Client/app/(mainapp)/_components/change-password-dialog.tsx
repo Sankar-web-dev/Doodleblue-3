@@ -128,7 +128,7 @@ export function ChangePasswordDialog({
                 type={showCurrent ? "text" : "password"}
                 autoComplete="current-password"
                 placeholder="Enter current password"
-                className="h-11 rounded-xl pl-10 pr-11 border-border/70 focus-visible:ring-primary"
+                className="h-11 rounded-lg pl-10 pr-11 border-border/70 focus-visible:ring-primary"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 disabled={changeMutation.isPending}
@@ -157,7 +157,7 @@ export function ChangePasswordDialog({
                 type={showNew ? "text" : "password"}
                 autoComplete="new-password"
                 placeholder="Min 10 characters"
-                className="h-11 rounded-xl pl-10 pr-11 border-border/70 focus-visible:ring-primary"
+                className="h-11 rounded-lg pl-10 pr-11 border-border/70 focus-visible:ring-primary"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 disabled={changeMutation.isPending}
@@ -186,7 +186,7 @@ export function ChangePasswordDialog({
                 type={showConfirm ? "text" : "password"}
                 autoComplete="new-password"
                 placeholder="Repeat new password"
-                className="h-11 rounded-xl pl-10 pr-11 border-border/70 focus-visible:ring-primary"
+                className="h-11 rounded-lg pl-10 pr-11 border-border/70 focus-visible:ring-primary"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 disabled={changeMutation.isPending}
@@ -207,13 +207,13 @@ export function ChangePasswordDialog({
           </div>
 
           {formError && (
-            <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
               {formError}
             </div>
           )}
 
           {changed && (
-            <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+            <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-600 dark:text-emerald-400">
               <ShieldCheck className="h-4 w-4" />
               Password updated successfully.
             </div>

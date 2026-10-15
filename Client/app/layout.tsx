@@ -1,9 +1,15 @@
-import { Oxanium } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
 
-const oxanium = Oxanium({
-  variable: "--font-oxanium",
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
   display: "swap",
 });
@@ -15,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${oxanium.variable} ${oxanium.className} antialiased font-sans`}>
+      <body className={`${inter.variable} ${spaceGrotesk.variable} antialiased font-sans`}>
         <Providers>{children}</Providers>
       </body>
     </html>

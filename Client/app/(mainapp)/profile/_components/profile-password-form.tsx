@@ -87,7 +87,7 @@ export function ProfilePasswordForm() {
                 type={showCurrent ? "text" : "password"}
                 autoComplete="current-password"
                 placeholder="Enter current password"
-                className="h-11 rounded-xl pl-10 pr-11 border-border/80 bg-background/50 focus-visible:ring-primary/40 focus-visible:border-primary"
+                className="h-11 rounded-lg pl-10 pr-11 border-border/80 bg-background/50 focus-visible:ring-primary/40 focus-visible:border-primary"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 disabled={changeMutation.isPending}
@@ -114,7 +114,7 @@ export function ProfilePasswordForm() {
                   type={showNew ? "text" : "password"}
                   autoComplete="new-password"
                   placeholder="Min 10 characters"
-                  className="h-11 rounded-xl pl-10 pr-11 border-border/80 bg-background/50 focus-visible:ring-primary/40 focus-visible:border-primary"
+                  className="h-11 rounded-lg pl-10 pr-11 border-border/80 bg-background/50 focus-visible:ring-primary/40 focus-visible:border-primary"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   disabled={changeMutation.isPending}
@@ -139,7 +139,7 @@ export function ProfilePasswordForm() {
                   type={showConfirm ? "text" : "password"}
                   autoComplete="new-password"
                   placeholder="Repeat new password"
-                  className="h-11 rounded-xl pl-10 pr-11 border-border/80 bg-background/50 focus-visible:ring-primary/40 focus-visible:border-primary"
+                  className="h-11 rounded-lg pl-10 pr-11 border-border/80 bg-background/50 focus-visible:ring-primary/40 focus-visible:border-primary"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={changeMutation.isPending}
@@ -157,13 +157,13 @@ export function ProfilePasswordForm() {
           </div>
 
           {formError && (
-            <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
               {formError}
             </div>
           )}
 
           {changed && (
-            <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+            <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-600 dark:text-emerald-400">
               <CheckCircle2 className="h-4 w-4" />
               Password updated successfully.
             </div>
@@ -172,7 +172,7 @@ export function ProfilePasswordForm() {
           <div className="flex justify-end pt-2">
             <Button
               type="submit"
-              className="h-11 px-6 bg-primary hover:bg-primary/85 text-primary-foreground shadow-sm shadow-primary/25 transition-all rounded-xl"
+              className="h-11 px-6 bg-primary hover:bg-primary/85 text-primary-foreground shadow-sm shadow-primary/25 transition-all rounded-lg"
               disabled={changeMutation.isPending}
             >
               {changeMutation.isPending ? (

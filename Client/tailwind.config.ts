@@ -73,8 +73,17 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["var(--font-oxanium)", "system-ui", "sans-serif"],
-        oxanium: ["var(--font-oxanium)", "sans-serif"],
+        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        display: ["var(--font-space-grotesk)", "var(--font-inter)", "sans-serif"],
+      },
+      keyframes: {
+        "fade-up": {
+          from: { opacity: "0", transform: "translateY(10px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+      },
+      animation: {
+        "fade-up": "fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both",
       },
     },
   },

@@ -176,7 +176,7 @@ export function UsersView() {
       {/* Page header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Users</h1>
+          <h1 className="font-display text-2xl font-bold tracking-tight">Users</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Provision user accounts, assign custom roles, and view access profiles.
           </p>
