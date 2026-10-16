@@ -7,24 +7,180 @@ datasource db {
   provider = "postgresql"
 }
 
+// ======================================================
+// ENUMS
+// ======================================================
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+  OTHER
+}
+
+enum BloodGroup {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
+  UNKNOWN
+}
+
+enum TravelPreference {
+  NEARBY
+  ANYWHERE
+}
+
+enum ContactPreference {
+  EMAIL
+  PHONE
+  BOTH
+}
+
+enum RegistrationFor {
+  SELF
+  SOMEONE_ELSE
+}
+
+enum HospitalType {
+  GOVERNMENT
+  PRIVATE
+  TRUST
+  OTHER
+}
+
+enum ContactDesignation {
+  ADMIN
+  DOCTOR
+  BLOOD_BANK_OFFICER
+  OTHER
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  SUSPENDED
+}
+
+enum RequestType {
+  RECIPIENT
+  BLOOD_BANK
+}
+
+enum BloodComponent {
+  WHOLE_BLOOD
+  PACKED_RED_CELLS
+  PLATELETS
+  PLASMA
+  CRYOPRECIPITATE
+  OTHER
+}
+
+enum BloodUrgency {
+  EMERGENCY
+  WITHIN_24_HOURS
+  SCHEDULED
+}
+
+enum BloodRequestStatus {
+  OPEN
+  PARTIALLY_FULFILLED
+  FULFILLED
+  CANCELLED
+  EXPIRED
+}
+
+enum DonorResponseStatus {
+  INTERESTED
+  CONTACTED
+  APPOINTMENT_SCHEDULED
+  COMPLETED
+  DECLINED
+  CANCELLED
+}
+
+enum DonationStatus {
+  REGISTERED
+  SCREENING
+  APPROVED
+  COMPLETED
+  DEFERRED
+  CANCELLED
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  MISSED
+}
+
+enum ClinicalScreeningStatus {
+  NOT_RECORDED
+  PENDING
+  CLEARED
+  DEFERRED
+  REFERRED
+}
+
+enum NotificationType {
+  BLOOD_REQUEST
+  DONOR_RESPONSE
+  APPOINTMENT
+  REQUEST_UPDATE
+  VERIFICATION
+  SYSTEM
+}
+
+// ======================================================
+// AUTHENTICATION AND RBAC
+// Your existing models, with additional relations.
+// ======================================================
+
 model User {
-  id                String    @id @default(uuid())
-  name              String
-  email             String    @unique
-  passwordHash      String
-  /// Role name — "SUPER_ADMIN" for the system account, otherwise the Role row's name.
-  role              String
-  /// References the Role row. Not set for SUPER_ADMIN.
-  roleId            String?
-  roleRef           Role?     @relation(fields: [roleId], references: [id], onDelete: SetNull)
-  /// Optional profile image URL.
-  image             String?
-  mustChangePassword Boolean  @default(false)
-  isActive          Boolean   @default(true)
-  sessions          Session[]
-  createdRoles      Role[]    @relation("RoleCreatedBy")
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id                 String  @id @default(uuid())
+  name               String
+  email              String  @unique
+  passwordHash       String
+  role               String
+  roleId             String?
+  image              String?
+  mustChangePassword Boolean @default(false)
+  isActive           Boolean @default(true)
+
+  roleRef Role? @relation(fields: [roleId], references: [id], onDelete: SetNull)
+
+  sessions     Session[]
+  createdRoles Role[]    @relation("RoleCreatedBy")
+
+  personalProfile  PersonalProfile?
+  donorProfile     DonorProfile?
+  recipientProfile RecipientProfile?
+  bloodBankProfile BloodBankProfile?
+
+  createdRequests BloodRequest[] @relation("RequestCreator")
+  notifications   Notification[]
+
+  verifiedBanks      BloodBankProfile[]  @relation("BankVerifier")
+  reviewedScreenings DonationScreening[] @relation("ScreeningReviewer")
+  verifiedDonations  Donation[]          @relation("DonationVerifier")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([role])
   @@index([isActive])
@@ -32,18 +188,19 @@ model User {
 }
 
 model Role {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  description String   @default("")
-  /// Permission matrix — [{ resource, actions: string[] }] — validated by DTOs.
-  permissions Json     @default("[]")
-  isSystem    Boolean  @default(false)
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String  @default("")
+  permissions Json    @default("[]")
+  isSystem    Boolean @default(false)
   isActive    Boolean @default(true)
+
   createdById String?
-  createdBy   User?    @relation("RoleCreatedBy", fields: [createdById], references: [id])
-  users       User[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdBy   User?   @relation("RoleCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  users     User[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Session {
@@ -57,3 +214,371 @@ model Session {
   @@index([userId])
   @@index([expiresAt])
 }
+
+// ======================================================
+// PERSONAL DETAILS
+// Used by individual donors and recipients.
+// ======================================================
+
+model PersonalProfile {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  dateOfBirth   DateTime?
+  gender        Gender?
+  phoneNumber   String?
+  maritalStatus MaritalStatus?
+
+  addressLine String?
+  city        String?
+  district    String?
+  state       String?
+  pincode     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([city])
+  @@index([district, state])
+  @@index([pincode])
+}
+
+// ======================================================
+// DONOR PROFILE
+// Long-term donor details and self-reported health history.
+// ======================================================
+
+model DonorProfile {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  bloodGroup BloodGroup?
+  heightCm   Float?
+  weightKg   Float?
+
+  donatedBefore         Boolean   @default(false)
+  previousDonationCount Int       @default(0)
+  lastDonationDate      DateTime?
+
+  takesMedication   Boolean?
+  medicationDetails String?
+
+  hasTattoo  Boolean?
+  tattooDate DateTime?
+
+  hasSeriousMedicalCondition Boolean?
+  medicalConditionDetails    String?
+
+  hasDiabetes   Boolean?
+  diabetesLevel String?
+
+  hasHadSurgery   Boolean?
+  lastSurgeryDate DateTime?
+
+  regularAlcoholUse         Boolean?
+  currentlyPregnant         Boolean?
+  recentPregnancyOrDelivery Boolean?
+  lastPregnancyDate         DateTime?
+
+  isAvailable         Boolean           @default(true)
+  travelPreference    TravelPreference  @default(NEARBY)
+  maxTravelDistanceKm Int?
+  contactPreference   ContactPreference @default(BOTH)
+
+  // This is not a substitute for professional eligibility screening.
+  profileCompleted Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  responses    DonorResponse[]
+  donations    Donation[]
+  appointments Appointment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([bloodGroup, isAvailable])
+  @@index([isAvailable, travelPreference])
+  @@index([lastDonationDate])
+}
+
+// ======================================================
+// RECIPIENT PROFILE
+// Patient-related registration preferences.
+// ======================================================
+
+model RecipientProfile {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  registrationFor       RegistrationFor @default(SELF)
+  relationshipToPatient String?
+  profileCompleted      Boolean         @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  requests BloodRequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ======================================================
+// BLOOD BANK / HOSPITAL PROFILE
+// ======================================================
+
+model BloodBankProfile {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  institutionName String
+  hospitalType    HospitalType @default(OTHER)
+  hospitalPhone   String
+  website         String?
+
+  contactPersonName  String
+  contactDesignation ContactDesignation @default(OTHER)
+  contactPhone       String
+  officialEmail      String?
+
+  addressLine String
+  city        String
+  district    String
+  state       String
+  pincode     String
+
+  registrationNumber String?
+  verificationStatus VerificationStatus @default(PENDING)
+  verificationNotes  String?
+  verifiedAt         DateTime?
+  verifiedByUserId   String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  verifiedBy User? @relation("BankVerifier", fields: [verifiedByUserId], references: [id], onDelete: SetNull)
+
+  requests BloodRequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([verificationStatus])
+  @@index([city, district, state])
+  @@index([institutionName])
+}
+
+// ======================================================
+// BLOOD REQUESTS
+// Shared model for recipient requests and bank requirements.
+// ======================================================
+
+model BloodRequest {
+  id String @id @default(uuid())
+
+  requestType        RequestType
+  createdByUserId    String
+  recipientProfileId String?
+  bloodBankProfileId String?
+
+  bloodGroup     BloodGroup
+  component      BloodComponent @default(WHOLE_BLOOD)
+  unitsRequired  Int
+  unitsFulfilled Int            @default(0)
+
+  urgency BloodUrgency
+  status  BloodRequestStatus @default(OPEN)
+
+  requiredBy DateTime?
+  expiresAt  DateTime?
+
+  // Recipient/patient context: collect only what is necessary.
+  patientName           String?
+  patientAge            Int?
+  relationshipToPatient String?
+
+  hospitalName    String?
+  hospitalAddress String?
+  city            String
+  district        String?
+  state           String
+  pincode         String?
+
+  contactName  String?
+  contactPhone String?
+  notes        String?
+
+  creator User @relation("RequestCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  recipientProfile RecipientProfile? @relation(fields: [recipientProfileId], references: [id], onDelete: SetNull)
+
+  bloodBankProfile BloodBankProfile? @relation(fields: [bloodBankProfileId], references: [id], onDelete: SetNull)
+
+  responses    DonorResponse[]
+  donations    Donation[]
+  appointments Appointment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([requestType, status])
+  @@index([bloodGroup, city, status])
+  @@index([urgency, status])
+  @@index([requiredBy])
+  @@index([createdByUserId])
+  @@index([recipientProfileId])
+  @@index([bloodBankProfileId])
+}
+
+// ======================================================
+// DONOR RESPONSES
+// A donor can respond to a recipient or blood bank request.
+// ======================================================
+
+model DonorResponse {
+  id             String @id @default(uuid())
+  requestId      String
+  donorProfileId String
+
+  status       DonorResponseStatus @default(INTERESTED)
+  unitsOffered Int                 @default(1)
+  message      String?
+  contactedAt  DateTime?
+
+  request BloodRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  donor DonorProfile @relation(fields: [donorProfileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([requestId, donorProfileId])
+  @@index([donorProfileId, status])
+  @@index([requestId, status])
+}
+
+// ======================================================
+// DONATION RECORD
+// One record per actual donation event.
+// ======================================================
+
+model Donation {
+  id             String @id @default(uuid())
+  requestId      String
+  donorProfileId String
+
+  status             DonationStatus @default(REGISTERED)
+  unitsDonated       Int            @default(1)
+  donationDate       DateTime?
+  collectionLocation String?
+  notes              String?
+
+  verifiedByUserId String?
+  verifiedAt       DateTime?
+
+  request BloodRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+
+  donor DonorProfile @relation(fields: [donorProfileId], references: [id], onDelete: Restrict)
+
+  verifiedBy User? @relation("DonationVerifier", fields: [verifiedByUserId], references: [id], onDelete: SetNull)
+
+  screening    DonationScreening?
+  appointments Appointment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([donorProfileId, status])
+  @@index([donationDate])
+  @@index([requestId, status])
+}
+
+// ======================================================
+// DONATION-DAY HEALTH SCREENING
+// Separate from long-term donor profile.
+// Restrict access to authorized clinical staff.
+// ======================================================
+
+model DonationScreening {
+  id         String @id @default(uuid())
+  donationId String @unique
+
+  recentFever          Boolean?
+  alcoholWithin24Hours Boolean?
+  currentlyUnwell      Boolean?
+  recentInfection      Boolean?
+  medicationChanges    Boolean?
+  additionalNotes      String?
+
+  // Only record clinical results if required and managed
+  // under appropriate medical and privacy controls.
+  clinicalStatus     ClinicalScreeningStatus @default(NOT_RECORDED)
+  hivScreeningStatus ClinicalScreeningStatus @default(NOT_RECORDED)
+
+  reviewedByUserId String?
+  reviewedAt       DateTime?
+  deferUntil       DateTime?
+  reviewerNotes    String?
+
+  donation Donation @relation(fields: [donationId], references: [id], onDelete: Cascade)
+
+  reviewedBy User? @relation("ScreeningReviewer", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clinicalStatus])
+  @@index([reviewedByUserId])
+}
+
+// ======================================================
+// DONATION APPOINTMENTS
+// ======================================================
+
+model Appointment {
+  id             String  @id @default(uuid())
+  requestId      String
+  donorProfileId String
+  donationId     String?
+
+  scheduledAt DateTime
+  location    String?
+  status      AppointmentStatus @default(SCHEDULED)
+  notes       String?
+
+  request BloodRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  donor DonorProfile @relation(fields: [donorProfileId], references: [id], onDelete: Cascade)
+
+  donation Donation? @relation(fields: [donationId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([donorProfileId, scheduledAt])
+  @@index([requestId, status])
+}
+
+// ======================================================
+// NOTIFICATIONS
+// ======================================================
+
+model Notification {
+  id     String @id @default(uuid())
+  userId String
+
+  type    NotificationType
+  title   String
+  message String
+  link    String?
+  isRead  Boolean          @default(false)
+  readAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead, createdAt])
+}
+
