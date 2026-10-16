@@ -25,12 +25,12 @@ export function renderLandingPage(opts: {
     align-items: center;
     justify-content: center;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    background: #0c1210;
-    color: #e8f0ec;
+    background: #110b0c;
+    color: #f0e8e9;
     background-image:
-      radial-gradient(at 0% 0%, oklch(0.50 0.13 158 / 0.25) 0px, transparent 48%),
-      radial-gradient(at 100% 0%, oklch(0.62 0.10 195 / 0.15) 0px, transparent 45%),
-      radial-gradient(at 50% 100%, oklch(0.72 0.14 120 / 0.12) 0px, transparent 48%);
+      radial-gradient(at 0% 0%, oklch(0.55 0.20 25 / 0.30) 0px, transparent 48%),
+      radial-gradient(at 100% 0%, oklch(0.70 0.15 65 / 0.12) 0px, transparent 45%),
+      radial-gradient(at 50% 100%, oklch(0.65 0.18 15 / 0.14) 0px, transparent 48%);
   }
   .card {
     text-align: center;
@@ -47,17 +47,17 @@ export function renderLandingPage(opts: {
     border-radius: 16px;
     display: flex; align-items: center; justify-content: center;
     font-weight: 800; font-size: 20px; letter-spacing: -0.02em;
-    color: #0c1210;
-    background: linear-gradient(135deg, oklch(0.78 0.17 152), oklch(0.74 0.11 195));
-    box-shadow: 0 8px 24px -4px oklch(0.78 0.17 152 / 0.45);
+    color: #ffffff;
+    background: linear-gradient(135deg, oklch(0.62 0.22 25), oklch(0.55 0.20 20));
+    box-shadow: 0 8px 24px -4px oklch(0.62 0.22 25 / 0.45);
   }
   h1 {
     font-size: 28px; font-weight: 800; letter-spacing: -0.02em;
-    background: linear-gradient(135deg, oklch(0.85 0.15 152), oklch(0.80 0.11 195));
+    background: linear-gradient(135deg, oklch(0.78 0.18 25), oklch(0.80 0.13 55));
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent;
   }
-  .sub { margin-top: 6px; font-size: 14px; color: rgba(232, 240, 236, 0.55); }
+  .sub { margin-top: 6px; font-size: 14px; color: rgba(240, 232, 233, 0.55); }
   .status {
     display: inline-flex; align-items: center; gap: 8px;
     margin-top: 24px; padding: 6px 14px;
@@ -71,7 +71,7 @@ export function renderLandingPage(opts: {
     50% { box-shadow: 0 0 0 6px rgba(74, 222, 128, 0); }
   }
   .meta {
-    margin-top: 20px; font-size: 12px; color: rgba(232, 240, 236, 0.4);
+    margin-top: 20px; font-size: 12px; color: rgba(240, 232, 233, 0.4);
     font-family: ui-monospace, "JetBrains Mono", monospace;
   }
   .meta span { margin: 0 8px; }
@@ -83,12 +83,12 @@ export function renderLandingPage(opts: {
   }
   .btn:hover { transform: translateY(-1px); }
   .btn.primary {
-    color: #0c1210;
-    background: linear-gradient(135deg, oklch(0.78 0.17 152), oklch(0.70 0.15 152));
-    box-shadow: 0 6px 20px -4px oklch(0.78 0.17 152 / 0.45);
+    color: #ffffff;
+    background: linear-gradient(135deg, oklch(0.62 0.22 25), oklch(0.55 0.20 25));
+    box-shadow: 0 6px 20px -4px oklch(0.62 0.22 25 / 0.45);
   }
   .btn.ghost {
-    color: rgba(232, 240, 236, 0.75);
+    color: rgba(240, 232, 233, 0.75);
     border: 1px solid rgba(255, 255, 255, 0.12);
     background: rgba(255, 255, 255, 0.04);
   }
@@ -98,7 +98,7 @@ export function renderLandingPage(opts: {
   <div class="card">
     <div class="mark">DB</div>
     <h1>DoodleBlue API</h1>
-    <p class="sub">User, role &amp; permission management service</p>
+    <p class="sub">Blood donation platform — admin &amp; access service</p>
     <div><span class="status"><span class="dot"></span>Operational</span></div>
     <p class="meta"><span>v${version}</span><span>&middot;</span><span>uptime ${uptime}</span></p>
     <div class="actions">

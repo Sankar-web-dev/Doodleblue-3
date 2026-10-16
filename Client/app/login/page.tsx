@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  Layers,
+  Droplet,
   Mail,
   Lock,
   Eye,
@@ -89,15 +89,15 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen w-full bg-background">
       {/* Brand panel — visible on large screens */}
-      <aside className="relative hidden w-1/2 overflow-hidden lg:flex lg:flex-col lg:justify-between bg-[oklch(0.16_0.02_168)] p-12 text-white">
+      <aside className="relative hidden w-1/2 overflow-hidden lg:flex lg:flex-col lg:justify-between bg-[oklch(0.17_0.035_20)] p-12 text-white">
         {/* Decorations */}
         <div className="dot-grid pointer-events-none absolute inset-0 opacity-60" />
-        <div className="animate-drift pointer-events-none absolute -top-32 -right-32 h-96 w-96 rounded-full bg-[oklch(0.78_0.17_152/0.18)] blur-3xl" />
-        <div className="animate-drift pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-[oklch(0.62_0.10_195/0.15)] blur-3xl [animation-delay:-6s]" />
+        <div className="animate-drift pointer-events-none absolute -top-32 -right-32 h-96 w-96 rounded-full bg-[oklch(0.70_0.21_25/0.22)] blur-3xl" />
+        <div className="animate-drift pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-[oklch(0.75_0.14_65/0.14)] blur-3xl [animation-delay:-6s]" />
 
         <div className="relative flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[oklch(0.78_0.17_152)] text-[oklch(0.15_0.035_168)] shadow-[0_0_24px_-4px] shadow-[oklch(0.78_0.17_152/0.6)]">
-            <Layers className="h-5 w-5" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[oklch(0.68_0.22_25)] text-white shadow-[0_0_24px_-4px] shadow-[oklch(0.68_0.22_25/0.6)]">
+            <Droplet className="h-5 w-5" />
           </div>
           <span className="font-display text-lg font-bold tracking-tight">
             DoodleBlue
@@ -106,20 +106,20 @@ export default function LoginPage() {
 
         <div className="relative max-w-md space-y-8">
           <h1 className="font-display text-4xl font-bold leading-[1.1] tracking-tight xl:text-5xl">
-            Manage access
+            Every drop
             <br />
-            <span className="text-[oklch(0.78_0.17_152)]">with confidence.</span>
+            <span className="text-[oklch(0.78_0.19_25)]">counts.</span>
           </h1>
           <p className="text-sm leading-relaxed text-white/55">
-            A clean admin console for users, roles and permissions — everything
-            you need to control who can do what.
+            The admin console for your blood donation platform — users, roles
+            and permissions, all in one place.
           </p>
 
           <ul className="space-y-5">
             {FEATURES.map((f) => (
               <li key={f.title} className="flex items-start gap-4">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5">
-                  <f.icon className="h-4 w-4 text-[oklch(0.78_0.17_152)]" />
+                  <f.icon className="h-4 w-4 text-[oklch(0.75_0.20_25)]" />
                 </div>
                 <div>
                   <p className="text-sm font-semibold">{f.title}</p>
@@ -143,7 +143,7 @@ export default function LoginPage() {
           {/* Mobile brand mark */}
           <div className="mb-8 flex items-center gap-3 lg:hidden">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-md shadow-primary/30">
-              <Layers className="h-5 w-5" />
+              <Droplet className="h-5 w-5" />
             </div>
             <span className="font-display text-lg font-bold tracking-tight">
               DoodleBlue

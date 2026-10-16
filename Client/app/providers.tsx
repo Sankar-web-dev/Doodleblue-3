@@ -30,14 +30,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
         duration={3500}
         toastOptions={{
           style: {
-            // App-themed toasts — card surface, brand accents (violet
-            // primary, amber secondary, cyan tertiary, red destructive).
+            // App-themed toasts — card surface; success stays a fixed
+            // semantic green (primary is brand crimson, not "ok").
             "--normal-bg": "oklch(var(--card) / 0.97)",
             "--normal-border": "oklch(var(--border))",
             "--normal-text": "oklch(var(--card-foreground))",
             "--success-bg": "oklch(var(--card) / 0.97)",
-            "--success-border": "oklch(var(--primary) / 0.4)",
-            "--success-text": "oklch(var(--primary))",
+            "--success-border": "oklch(0.60 0.16 155 / 0.4)",
+            "--success-text": "oklch(0.55 0.15 155)",
             "--error-bg": "oklch(var(--card) / 0.97)",
             "--error-border": "oklch(var(--destructive) / 0.4)",
             "--error-text": "oklch(var(--destructive))",
