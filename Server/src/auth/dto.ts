@@ -8,9 +8,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-
-const normalizeEmail = ({ value }: { value: unknown }) =>
-  typeof value === 'string' ? value.trim().toLowerCase() : value;
+import { normalizeEmail, trim } from '../common/dto.js';
 
 export class LoginDto {
   @Transform(normalizeEmail)
@@ -23,9 +21,7 @@ export class LoginDto {
 }
 
 export class RegisterDto {
-  @Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.trim() : value,
-  )
+  @Transform(trim)
   @IsString()
   @IsNotEmpty()
   @MinLength(2)
@@ -41,7 +37,7 @@ export class RegisterDto {
   @MaxLength(128)
   password!: string;
 
-  /** Optional — must reference an active role flagged isPublic. */
+  /** Optional — must reference an active role. */
   @IsOptional()
   @IsUUID()
   roleId?: string;

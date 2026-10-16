@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import express from 'express';
 import path from 'path';
 import { AppModule } from './app.module.js';
+import { ApiException } from './common/api-error.js';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -24,6 +25,19 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
+      // Field-level errors → error.details: [{field, message}]
+      exceptionFactory: (errors) =>
+        new ApiException(
+          400,
+          'VALIDATION_ERROR',
+          'Validation failed',
+          errors.flatMap((error) =>
+            Object.values(error.constraints ?? {}).map((message) => ({
+              field: error.property,
+              message,
+            })),
+          ),
+        ),
     }),
   );
 

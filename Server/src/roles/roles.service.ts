@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ApiException } from '../common/api-error.js';
+import { listMeta, pageParams } from '../common/pagination.js';
 import type { RoleModel } from '../generated/prisma/models.js';
 import type {
   CreateRoleDto,
@@ -67,25 +68,18 @@ export class RolesService {
       where.name = { contains: search, mode: 'insensitive' };
     }
 
+    const { skip, take } = pageParams(query);
     const [total, docs] = await Promise.all([
       this.prisma.role.count({ where }),
       this.prisma.role.findMany({
         where,
         orderBy: [{ isSystem: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }],
-        skip: (page - 1) * limit,
-        take: limit,
+        skip,
+        take,
       }),
     ]);
 
-    return {
-      data: docs.map(toResponse),
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+    return { data: docs.map(toResponse), meta: listMeta(total, page, limit) };
   }
 
   // ── getRoleById ───────────────────────────────────────────────────────────

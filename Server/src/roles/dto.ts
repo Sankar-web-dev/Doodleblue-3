@@ -14,9 +14,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { ACTIONS, RESOURCES } from '../common/constants.js';
-
-const trim = ({ value }: { value: unknown }) =>
-  typeof value === 'string' ? value.trim() : value;
+import { PaginationQueryDto, toBool, trim } from '../common/dto.js';
 
 export class PermissionDto {
   @IsIn(RESOURCES)
@@ -74,13 +72,7 @@ export class UpdateRoleDto {
   isActive?: boolean;
 }
 
-export class ListRolesQueryDto {
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  page: number = 1;
-
+export class ListRolesQueryDto extends PaginationQueryDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -95,13 +87,7 @@ export class ListRolesQueryDto {
   search?: string;
 
   @IsOptional()
-  @Transform(({ value }) =>
-    value === true || value === 'true'
-      ? true
-      : value === false || value === 'false'
-        ? false
-        : undefined,
-  )
+  @Transform(toBool)
   @IsBoolean()
   isActive?: boolean;
 }

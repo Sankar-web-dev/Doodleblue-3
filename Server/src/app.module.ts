@@ -7,6 +7,13 @@ import { PrismaModule } from './prisma/prisma.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { UsersModule } from './users/users.module.js';
 import { RolesModule } from './roles/roles.module.js';
+import { ProfilesModule } from './profiles/profiles.module.js';
+import { RequestsModule } from './requests/requests.module.js';
+import { ResponsesModule } from './responses/responses.module.js';
+import { DonationsModule } from './donations/donations.module.js';
+import { AppointmentsModule } from './appointments/appointments.module.js';
+import { NotificationsModule } from './notifications/notifications.module.js';
+import { AuditModule } from './audit/audit.module.js';
 import { ApiExceptionFilter } from './common/api-exception.filter.js';
 import { EnvelopeInterceptor } from './common/envelope.interceptor.js';
 
@@ -27,6 +34,13 @@ import { EnvelopeInterceptor } from './common/envelope.interceptor.js';
     AuthModule,
     UsersModule,
     RolesModule,
+    ProfilesModule,
+    RequestsModule,
+    ResponsesModule,
+    DonationsModule,
+    AppointmentsModule,
+    NotificationsModule,
+    AuditModule,
   ],
   controllers: [AppController],
   providers: [

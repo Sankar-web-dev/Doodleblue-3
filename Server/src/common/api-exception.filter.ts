@@ -80,6 +80,19 @@ export class ApiExceptionFilter implements ExceptionFilter {
       return;
     }
 
+    // Prisma record-not-found (update/delete on missing row) → 404
+    if (
+      typeof exception === 'object' &&
+      exception !== null &&
+      (exception as { code?: string }).code === 'P2025'
+    ) {
+      res.status(HttpStatus.NOT_FOUND).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Record not found' },
+      });
+      return;
+    }
+
     // Prisma unique-constraint violation → 409
     if (
       typeof exception === 'object' &&

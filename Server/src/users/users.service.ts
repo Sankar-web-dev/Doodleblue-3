@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ApiException } from '../common/api-error.js';
+import { listMeta, pageParams } from '../common/pagination.js';
 import { MailerService } from '../mail/mailer.service.js';
 import { SYSTEM_ROLE } from '../common/constants.js';
 import type { UserModel } from '../generated/prisma/models.js';
@@ -66,7 +67,10 @@ export class UsersService {
 
     // When no password is supplied, generate a secure random one — it is
     // emailed to the user and must be changed on first login.
+    // When no password is supplied, generate a secure random one — it is
+    // emailed to the user and must be changed on first login.
     const tempPassword = input.password ?? generateTempPassword();
+    const passwordWasGenerated = !input.password;
 
     const user = await this.prisma.user.create({
       data: {
@@ -83,15 +87,27 @@ export class UsersService {
       },
     });
 
-    const emailSent = await this.mailer
-      .sendTempPasswordEmail({
-        to: user.email,
-        name: user.name,
-        password: tempPassword,
-      })
-      .catch(() => false);
+    // Mail is disabled outside production — in development the generated
+    // password is returned in the response so it can be shared manually.
+    const emailSent =
+      process.env.NODE_ENV === 'production'
+        ? await this.mailer
+            .sendTempPasswordEmail({
+              to: user.email,
+              name: user.name,
+              password: tempPassword,
+            })
+            .catch(() => false)
+        : false;
 
-    return { user: safeUser(user), emailSent };
+    const temporaryPassword =
+      passwordWasGenerated &&
+      !emailSent &&
+      process.env.NODE_ENV !== 'production'
+        ? tempPassword
+        : undefined;
+
+    return { user: safeUser(user), emailSent, temporaryPassword };
   }
 
   // ── listUsers ─────────────────────────────────────────────────────────────
@@ -121,25 +137,18 @@ export class UsersService {
       }
     }
 
+    const { skip, take } = pageParams(query);
     const [total, docs] = await Promise.all([
       this.prisma.user.count({ where }),
       this.prisma.user.findMany({
         where,
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-        skip: (page - 1) * limit,
-        take: limit,
+        skip,
+        take,
       }),
     ]);
 
-    return {
-      data: docs.map(safeUser),
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+    return { data: docs.map(safeUser), meta: listMeta(total, page, limit) };
   }
 
   // ── listUserOptions ───────────────────────────────────────────────────────

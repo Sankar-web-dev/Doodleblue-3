@@ -1,22 +1,18 @@
-import { Transform, Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsEmail,
-  IsInt,
   IsOptional,
   IsString,
   IsUUID,
-  Max,
   MaxLength,
-  Min,
   MinLength,
 } from 'class-validator';
-
-const trim = ({ value }: { value: unknown }) =>
-  typeof value === 'string' ? value.trim() : value;
-
-const normalizeEmail = ({ value }: { value: unknown }) =>
-  typeof value === 'string' ? value.trim().toLowerCase() : value;
+import {
+  PaginationQueryDto,
+  normalizeEmail,
+  trim,
+} from '../common/dto.js';
 
 export class CreateUserDto {
   @Transform(trim)
@@ -82,23 +78,10 @@ export class UpdateUserDto {
   isActive?: boolean;
 }
 
-export class ListUsersQueryDto {
+export class ListUsersQueryDto extends PaginationQueryDto {
   @IsOptional()
   @Transform(trim)
   @IsString()
   @MinLength(1)
   search?: string;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  page: number = 1;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  @Max(100)
-  limit: number = 20;
 }
