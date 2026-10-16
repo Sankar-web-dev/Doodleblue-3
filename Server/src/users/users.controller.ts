@@ -14,10 +14,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import fs from 'fs';
-import path from 'path';
 import { ApiException } from '../common/api-error.js';
+import { avatarMulterOptions } from '../common/avatar-upload.js';
 import {
   AuthGuard,
   type AuthenticatedRequest,
@@ -31,42 +29,6 @@ import {
   ListUsersQueryDto,
   UpdateUserDto,
 } from './dto.js';
-
-const UPLOAD_ROOT = path.resolve(process.cwd(), 'uploads', 'profiles');
-
-const avatarStorage = diskStorage({
-  destination: (_req, _file, cb) => {
-    if (!fs.existsSync(UPLOAD_ROOT)) {
-      fs.mkdirSync(UPLOAD_ROOT, { recursive: true });
-    }
-    cb(null, UPLOAD_ROOT);
-  },
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    cb(null, `profile-${uniqueSuffix}${ext}`);
-  },
-});
-
-const avatarFileFilter = (
-  _req: Express.Request,
-  file: Express.Multer.File,
-  cb: (error: Error | null, acceptFile: boolean) => void,
-) => {
-  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-  if (allowed.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(
-      new ApiException(
-        400,
-        'INVALID_FILE_TYPE',
-        'Only JPEG, PNG, WEBP, and GIF images are allowed',
-      ),
-      false,
-    );
-  }
-};
 
 // User-account provisioning — SUPER_ADMIN (or any role granted users:*).
 @Controller('users')
@@ -82,13 +44,7 @@ export class UsersController {
 
   @Post('upload-avatar')
   @RequirePermission('users', 'create')
-  @UseInterceptors(
-    FileInterceptor('avatar', {
-      storage: avatarStorage,
-      fileFilter: avatarFileFilter,
-      limits: { fileSize: 5 * 1024 * 1024 },
-    }),
-  )
+  @UseInterceptors(FileInterceptor('avatar', avatarMulterOptions))
   uploadAvatar(@UploadedFile() file?: Express.Multer.File) {
     if (!file) {
       throw new ApiException(

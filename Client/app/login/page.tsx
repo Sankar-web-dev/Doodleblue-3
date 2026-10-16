@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -237,7 +238,13 @@ export default function LoginPage() {
           </form>
 
           <p className="mt-8 text-center text-xs text-muted-foreground">
-            Accounts are provisioned by your administrator.
+            Don&apos;t have an account?{" "}
+            <Link
+              href="/signup"
+              className="font-semibold text-primary hover:underline"
+            >
+              Create one
+            </Link>
           </p>
         </div>
       </main>
