@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                String    @id @default(uuid())
+  name              String
+  email             String    @unique
+  passwordHash      String
+  /// Role name — "SUPER_ADMIN" for the system account, otherwise the Role row's name.
+  role              String
+  /// References the Role row. Not set for SUPER_ADMIN.
+  roleId            String?
+  roleRef           Role?     @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  /// Optional profile image URL.
+  image             String?
+  mustChangePassword Boolean  @default(false)
+  isActive          Boolean   @default(true)
+  sessions          Session[]
+  createdRoles      Role[]    @relation("RoleCreatedBy")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([role])
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String   @default("")
+  /// Permission matrix — [{ resource, actions: string[] }] — validated by DTOs.
+  permissions Json     @default("[]")
+  isSystem    Boolean  @default(false)
+  isActive    Boolean @default(true)
+  createdById String?
+  createdBy   User?    @relation("RoleCreatedBy", fields: [createdById], references: [id])
+  users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
