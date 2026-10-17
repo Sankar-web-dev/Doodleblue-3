@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -11,12 +11,19 @@ import {
   Loader2,
   Megaphone,
   Save,
+  UserCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { profilesApi, PROFILES_BLOOD_BANK_KEY } from "@/api/profiles.api";
+import {
+  profilesApi,
+  PROFILES_BLOOD_BANK_KEY,
+  PROFILES_PERSONAL_KEY,
+  PROFILES_RECIPIENT_KEY,
+} from "@/api/profiles.api";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input, FieldError } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -26,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuthUser } from "@/lib/use-auth-user";
 
 import {
   BLOOD_GROUP_OPTIONS,
@@ -55,11 +63,21 @@ export function RequestForm({
   defaultValues,
 }: RequestFormProps) {
   const router = useRouter();
+  const { user } = useAuthUser();
   const [previewOpen, setPreviewOpen] = useState(false);
+
+  const roleLower = (user?.role || "").toLowerCase();
+  const isRecipient = roleLower.includes("recip");
+  const isBloodBank = roleLower.includes("bank");
+  const isAdmin = user?.role === "SUPER_ADMIN";
 
   const form = useForm<BloodRequestFormValues>({
     resolver: zodResolver(bloodRequestFormSchema),
-    defaultValues: defaultValues ?? BLOOD_REQUEST_FORM_DEFAULTS,
+    defaultValues:
+      defaultValues ?? {
+        ...BLOOD_REQUEST_FORM_DEFAULTS,
+        requestType: isRecipient ? "RECIPIENT" : isBloodBank ? "BLOOD_BANK" : "RECIPIENT",
+      },
   });
   const {
     register,
@@ -71,49 +89,100 @@ export function RequestForm({
     formState: { errors },
   } = form;
 
-  // Blood bank profile — prefills location/contact on create and names the poster.
+  const watchedRequestType = useWatch({ control, name: "requestType" });
+  const currentRequestType = watchedRequestType || (isRecipient ? "RECIPIENT" : "BLOOD_BANK");
+
+  // Blood bank profile (for bank accounts)
   const { data: bankProfile } = useQuery({
     queryKey: PROFILES_BLOOD_BANK_KEY,
-    queryFn: () =>
-      profilesApi.getBloodBankProfile().then((res) => res.profile),
+    queryFn: () => profilesApi.getBloodBankProfile().then((res) => res.profile),
+    enabled: isBloodBank || isAdmin,
   });
 
-  // Prefill venue/contact from the institution profile on first load (create only).
+  // Recipient profiles (for recipient accounts)
+  const { data: recipientProfile } = useQuery({
+    queryKey: PROFILES_RECIPIENT_KEY,
+    queryFn: () => profilesApi.getRecipientProfile().then((res) => res.profile),
+    enabled: isRecipient || isAdmin,
+  });
+
+  const { data: personalProfile } = useQuery({
+    queryKey: PROFILES_PERSONAL_KEY,
+    queryFn: () => profilesApi.getPersonalProfile().then((res) => res.profile),
+    enabled: isRecipient || isAdmin,
+  });
+
+  // Prefill details from profile on first load (create mode only)
   useEffect(() => {
-    if (mode !== "create" || !bankProfile) return;
+    if (mode !== "create") return;
     const dirty = form.formState.dirtyFields;
-    const prefill = (field: keyof BloodRequestFormValues, value?: string | null) => {
-      if (!value || dirty[field]) return;
-      if (!getValues(field)) setValue(field, value, { shouldDirty: false });
+    const prefill = (field: keyof BloodRequestFormValues, value?: string | number | null) => {
+      if (value === undefined || value === null || value === "" || dirty[field]) return;
+      if (!getValues(field)) {
+        setValue(field, value as never, { shouldDirty: false });
+      }
     };
-    prefill("hospitalName", bankProfile.institutionName);
-    prefill("city", bankProfile.city);
-    prefill("district", bankProfile.district);
-    prefill("state", bankProfile.state);
-    prefill("pincode", bankProfile.pincode);
-    prefill("contactName", bankProfile.contactPersonName);
-    prefill("contactPhone", bankProfile.contactPhone);
+
+    if (isRecipient) {
+      prefill("requestType", "RECIPIENT");
+      if (recipientProfile?.registrationFor === "SELF") {
+        prefill("patientName", user?.name);
+        prefill("relationshipToPatient", "Self");
+      } else if (recipientProfile?.registrationFor === "SOMEONE_ELSE") {
+        prefill("relationshipToPatient", recipientProfile?.relationshipToPatient);
+      }
+      prefill("contactName", user?.name);
+      prefill("contactPhone", personalProfile?.phoneNumber);
+      prefill("hospitalAddress", personalProfile?.addressLine);
+      prefill("city", personalProfile?.city);
+      prefill("district", personalProfile?.district);
+      prefill("state", personalProfile?.state);
+      prefill("pincode", personalProfile?.pincode);
+    } else if (isBloodBank && bankProfile) {
+      prefill("requestType", "BLOOD_BANK");
+      prefill("hospitalName", bankProfile.institutionName);
+      prefill("city", bankProfile.city);
+      prefill("district", bankProfile.district);
+      prefill("state", bankProfile.state);
+      prefill("pincode", bankProfile.pincode);
+      prefill("contactName", bankProfile.contactPersonName);
+      prefill("contactPhone", bankProfile.contactPhone);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bankProfile, mode]);
+  }, [bankProfile, recipientProfile, personalProfile, user, isRecipient, isBloodBank, mode]);
 
   const goBack = () => router.push("/requests");
 
   const createMutation = useCreateRequest(() => {
     toast.success("Request published", {
-      description: "Your blood appeal is now visible to donors.",
+      description: isRecipient
+        ? "Your blood appeal has been submitted and nearby donors are being notified."
+        : "Your blood appeal is now visible to donors.",
     });
     router.push("/requests");
   });
 
   const updateMutation = useUpdateRequest(requestId ?? "", () => {
-    toast.success("Request updated");
+    toast.success("Request updated", {
+      description: "Changes to your blood request have been saved.",
+    });
     router.push("/requests");
   });
 
   const activeMutation = mode === "create" ? createMutation : updateMutation;
 
   const onSubmit = (values: BloodRequestFormValues) => {
-    const input = toRequestInput(values);
+    const resolvedType = isRecipient
+      ? "RECIPIENT"
+      : isBloodBank
+      ? "BLOOD_BANK"
+      : values.requestType || "RECIPIENT";
+
+    const input = toRequestInput({
+      ...values,
+      requestType: resolvedType,
+    });
+
     activeMutation.mutate(input, {
       onError: (err) =>
         toast.error(
@@ -144,17 +213,37 @@ export function RequestForm({
 
   const err = (name: keyof BloodRequestFormValues) => errors[name]?.message;
 
+  const isCurrentRecipientRequest = currentRequestType === "RECIPIENT";
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight">
-            {mode === "create" ? "New Blood Request" : "Edit Blood Request"}
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-2xl font-bold tracking-tight">
+              {mode === "create"
+                ? isRecipient
+                  ? "Request Blood"
+                  : "New Blood Request"
+                : "Edit Blood Request"}
+            </h1>
+            <Badge
+              variant="outline"
+              className={
+                isCurrentRecipientRequest
+                  ? "border-rose-300 bg-rose-50 text-rose-700"
+                  : "border-blue-300 bg-blue-50 text-blue-700"
+              }
+            >
+              {isCurrentRecipientRequest ? "Recipient Appeal" : "Blood Bank Requirement"}
+            </Badge>
+          </div>
           <p className="mt-1 text-sm text-muted-foreground">
             {mode === "create"
-              ? "Fill in the requirement details and preview the appeal before publishing."
+              ? isRecipient
+                ? "Submit an urgent blood request for yourself or a loved one. Eligible donors in your city will be alerted immediately."
+                : "Fill in the requirement details and preview the appeal before publishing."
               : "Update the request details, then save your changes."}
           </p>
         </div>
@@ -185,15 +274,54 @@ export function RequestForm({
             ) : (
               <Save className="h-4 w-4" />
             )}
-            {mode === "create" ? "Publish Request" : "Save Changes"}
+            {mode === "create"
+              ? isRecipient
+                ? "Publish Appeal"
+                : "Publish Request"
+              : "Save Changes"}
           </Button>
         </div>
       </div>
 
-      {/* Requirement */}
+      {/* Admin Request Type Toggle (Only if Super Admin) */}
+      {isAdmin && (
+        <Card className="border-border/80 shadow-xs">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Request Classification</CardTitle>
+            <CardDescription>
+              Select whether this request represents an individual recipient appeal or a blood bank facility requirement.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Request Type *
+              </Label>
+              <Controller
+                control={control}
+                name="requestType"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="RECIPIENT">Recipient (Patient / Individual)</SelectItem>
+                      <SelectItem value="BLOOD_BANK">Blood Bank / Hospital</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Requirement Details */}
       <Card className="border-border/80 shadow-xs">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Requirement Details</CardTitle>
+          <CardDescription>Specify the blood group, component, and urgency required.</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-2">
@@ -223,7 +351,7 @@ export function RequestForm({
 
           <div className="space-y-2">
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Component
+              Component *
             </Label>
             <Controller
               control={control}
@@ -312,15 +440,29 @@ export function RequestForm({
         </CardContent>
       </Card>
 
-      {/* Patient context (optional) */}
+      {/* Patient Context (Prominent for Recipient, Optional for Blood Bank) */}
       <Card className="border-border/80 shadow-xs">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">
-            Patient Details{" "}
-            <span className="text-xs font-normal text-muted-foreground">
-              (optional — only if this request is for a specific patient)
-            </span>
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">
+              Patient Details{" "}
+              {!isCurrentRecipientRequest && (
+                <span className="text-xs font-normal text-muted-foreground">
+                  (optional — only if this request is for a specific patient)
+                </span>
+              )}
+            </CardTitle>
+            {isCurrentRecipientRequest && (
+              <Badge variant="secondary" className="gap-1 text-xs">
+                <UserCheck className="h-3 w-3 text-primary" /> Recipient Context
+              </Badge>
+            )}
+          </div>
+          <CardDescription>
+            {isCurrentRecipientRequest
+              ? "Provide the patient's name and relationship to help donors confirm the recipient context."
+              : "Optional context if this blood requirement is earmarked for an admitted patient."}
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-5 sm:grid-cols-3">
           <div className="space-y-2">
@@ -328,9 +470,13 @@ export function RequestForm({
               htmlFor="patientName"
               className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
             >
-              Patient Name
+              Patient Name {isCurrentRecipientRequest ? "*" : ""}
             </Label>
-            <Input id="patientName" {...register("patientName")} />
+            <Input
+              id="patientName"
+              placeholder={isCurrentRecipientRequest ? "Patient's full name" : "Optional patient name"}
+              {...register("patientName")}
+            />
             <FieldError message={err("patientName")} />
           </div>
           <div className="space-y-2">
@@ -343,6 +489,7 @@ export function RequestForm({
             <Input
               id="patientAge"
               type="number"
+              placeholder="e.g. 42"
               min={0}
               max={120}
               {...register("patientAge", {
@@ -359,11 +506,11 @@ export function RequestForm({
               htmlFor="relationshipToPatient"
               className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
             >
-              Relationship
+              Relationship to Patient
             </Label>
             <Input
               id="relationshipToPatient"
-              placeholder="e.g. Father, Hospital staff"
+              placeholder={isCurrentRecipientRequest ? "e.g. Self, Father, Daughter" : "e.g. Father, Hospital staff"}
               {...register("relationshipToPatient")}
             />
             <FieldError message={err("relationshipToPatient")} />
@@ -374,7 +521,14 @@ export function RequestForm({
       {/* Venue & Location */}
       <Card className="border-border/80 shadow-xs">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Venue &amp; Location</CardTitle>
+          <CardTitle className="text-base">
+            {isCurrentRecipientRequest ? "Hospital & Treatment Facility" : "Venue & Location"}
+          </CardTitle>
+          <CardDescription>
+            {isCurrentRecipientRequest
+              ? "Specify the hospital or medical center where the patient is admitted and where blood should be delivered."
+              : "Street address and city where donors should report for collection."}
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-2 sm:col-span-2 lg:col-span-2">
@@ -382,11 +536,11 @@ export function RequestForm({
               htmlFor="hospitalName"
               className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
             >
-              Hospital / Venue Name
+              Hospital / Venue Name {isCurrentRecipientRequest ? "*" : ""}
             </Label>
             <Input
               id="hospitalName"
-              placeholder="Where donors should report"
+              placeholder={isCurrentRecipientRequest ? "e.g. Apollo Hospital, Ward 4B, ICU" : "Where donors should report"}
               {...register("hospitalName")}
             />
             <FieldError message={err("hospitalName")} />
@@ -398,7 +552,7 @@ export function RequestForm({
             >
               Pincode
             </Label>
-            <Input id="pincode" {...register("pincode")} />
+            <Input id="pincode" placeholder="6-digit pincode" {...register("pincode")} />
             <FieldError message={err("pincode")} />
           </div>
           <div className="space-y-2 sm:col-span-2 lg:col-span-3">
@@ -410,7 +564,7 @@ export function RequestForm({
             </Label>
             <Input
               id="hospitalAddress"
-              placeholder="Street address of the collection venue"
+              placeholder="Street address of the hospital or collection facility"
               {...register("hospitalAddress")}
             />
             <FieldError message={err("hospitalAddress")} />
@@ -422,7 +576,7 @@ export function RequestForm({
             >
               City *
             </Label>
-            <Input id="city" {...register("city")} />
+            <Input id="city" placeholder="e.g. Chennai" {...register("city")} />
             <FieldError message={err("city")} />
           </div>
           <div className="space-y-2">
@@ -432,7 +586,7 @@ export function RequestForm({
             >
               District
             </Label>
-            <Input id="district" {...register("district")} />
+            <Input id="district" placeholder="District name" {...register("district")} />
             <FieldError message={err("district")} />
           </div>
           <div className="space-y-2">
@@ -442,7 +596,7 @@ export function RequestForm({
             >
               State *
             </Label>
-            <Input id="state" {...register("state")} />
+            <Input id="state" placeholder="e.g. Tamil Nadu" {...register("state")} />
             <FieldError message={err("state")} />
           </div>
         </CardContent>
@@ -451,7 +605,10 @@ export function RequestForm({
       {/* Contact & Notes */}
       <Card className="border-border/80 shadow-xs">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Contact &amp; Notes</CardTitle>
+          <CardTitle className="text-base">Point of Contact &amp; Additional Notes</CardTitle>
+          <CardDescription>
+            Who donors or blood bank staff can coordinate with regarding this request.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div className="space-y-2">
@@ -463,7 +620,7 @@ export function RequestForm({
             </Label>
             <Input
               id="contactName"
-              placeholder="Who donors should ask for"
+              placeholder="Who donors should ask for or contact"
               {...register("contactName")}
             />
             <FieldError message={err("contactName")} />
@@ -475,7 +632,11 @@ export function RequestForm({
             >
               Contact Phone
             </Label>
-            <Input id="contactPhone" {...register("contactPhone")} />
+            <Input
+              id="contactPhone"
+              placeholder="10-digit phone number"
+              {...register("contactPhone")}
+            />
             <FieldError message={err("contactPhone")} />
           </div>
           <div className="space-y-2 sm:col-span-2">
@@ -488,7 +649,11 @@ export function RequestForm({
             <textarea
               id="notes"
               className={TEXTAREA_CLASSES}
-              placeholder="Anything donors should know — documents to carry, parking, camp timings…"
+              placeholder={
+                isCurrentRecipientRequest
+                  ? "Doctor in charge, Patient Registration ID, required documents, or blood cross-matching instructions…"
+                  : "Anything donors should know — documents to carry, parking, camp timings…"
+              }
               {...register("notes")}
             />
             <FieldError message={err("notes")} />
@@ -502,9 +667,16 @@ export function RequestForm({
         onClose={() => setPreviewOpen(false)}
         data={posterDataFromValues(
           getValues(),
-          bankProfile?.institutionName
+          bankProfile?.institutionName,
+          isCurrentRecipientRequest ? (user?.name || getValues().patientName) : bankProfile?.institutionName
         )}
-        confirmLabel={mode === "create" ? "Publish Request" : "Save Changes"}
+        confirmLabel={
+          mode === "create"
+            ? isCurrentRecipientRequest
+              ? "Publish Appeal"
+              : "Publish Request"
+            : "Save Changes"
+        }
         onConfirm={handleConfirm}
         confirmPending={activeMutation.isPending}
       />

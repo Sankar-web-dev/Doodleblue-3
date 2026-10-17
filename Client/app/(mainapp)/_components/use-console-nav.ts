@@ -18,12 +18,15 @@ export function useConsoleNav(user: AuthUser | null): NavItem[] {
   return useMemo(
     () =>
       NAV_ITEMS.filter((item) => {
+        if (user?.role === "SUPER_ADMIN") return true;
         if (item.resource && !can(item.resource, "read")) return false;
-        if (
-          item.roleIncludes &&
-          !(user?.role ?? "").toLowerCase().includes(item.roleIncludes)
-        )
-          return false;
+        if (item.roleIncludes) {
+          const roleLower = (user?.role ?? "").toLowerCase();
+          const matches = Array.isArray(item.roleIncludes)
+            ? item.roleIncludes.some((r) => roleLower.includes(r.toLowerCase()))
+            : roleLower.includes(item.roleIncludes.toLowerCase());
+          if (!matches) return false;
+        }
         return true;
       }),
     [can, user?.role]

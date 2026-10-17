@@ -12,11 +12,7 @@ import {
   ShieldPlus,
   Loader2,
   Droplet,
-  Heart,
-  Calendar,
-  Phone,
   MapPin,
-  Scale,
   Sparkles,
   Activity,
   CheckCircle2,
@@ -24,6 +20,7 @@ import {
   FileEdit,
   HeartHandshake,
   Building2,
+  Plus,
 } from "lucide-react";
 
 import { useAuthUser } from "@/lib/use-auth-user";
@@ -905,17 +902,34 @@ export default function DashboardPage() {
                 <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
               </Link>
 
-              <div className="rounded-xl border border-border/80 bg-muted/20 p-4 space-y-2">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Blood Requests
-                </h4>
+              <div className="rounded-xl border border-border/80 bg-muted/20 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Blood Requests
+                  </h4>
+                  <Badge variant="outline" className="text-[10px]">
+                    {profileCompleted ? "Active" : "Onboarding"}
+                  </Badge>
+                </div>
                 <div className="space-y-1 text-xs">
                   <p className="text-foreground font-semibold">
-                    {profileCompleted ? "Ready to create" : "Complete onboarding first"}
+                    {profileCompleted ? "Need blood urgently?" : "Complete onboarding first"}
                   </p>
                   <p className="text-muted-foreground">
-                    Requests are matched with compatible donors in nearby authorized blood banks.
+                    Create an appeal to notify eligible donors and matching blood banks in your district.
                   </p>
+                </div>
+                <div className="flex flex-col gap-2 pt-1 sm:flex-row">
+                  <Button asChild size="sm" className="w-full gap-1.5 text-xs">
+                    <Link href="/requests/create">
+                      <Plus className="h-3.5 w-3.5" /> Request Blood
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="sm" className="w-full gap-1.5 text-xs">
+                    <Link href="/requests">
+                      <Droplet className="h-3.5 w-3.5" /> My Requests
+                    </Link>
+                  </Button>
                 </div>
               </div>
             </CardContent>

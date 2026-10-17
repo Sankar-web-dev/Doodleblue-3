@@ -20,9 +20,9 @@ export type NavItem = {
   resource?: Resource;
   /**
    * Role-name substring (lowercase) gating this item — e.g. "bank" shows it
-   * only for blood bank accounts.
+   * only for blood bank accounts. Can also be an array of matching role substrings.
    */
-  roleIncludes?: string;
+  roleIncludes?: string | string[];
 };
 
 /**
@@ -35,7 +35,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/roles",     label: "Roles",     icon: ShieldCheck,    resource: "roles" },
   { href: "/users",     label: "Users",     icon: Users,          resource: "users" },
   { href: "/blood-banks", label: "Blood Banks", icon: Building2,  resource: "users" },
-  { href: "/requests",    label: "Requests",    icon: Droplet,      roleIncludes: "bank" },
+  { href: "/requests",    label: "Blood Requests", icon: Droplet, roleIncludes: ["bank", "recip"] },
   { href: "/responses",   label: "My Responses", icon: HeartHandshake, roleIncludes: "dona" },
   { href: "/appointments", label: "Appointments", icon: CalendarClock, roleIncludes: "bank" },
   { href: "/appointments", label: "My Appointments", icon: CalendarClock, roleIncludes: "dona" },

@@ -144,7 +144,9 @@ export function RequestPoster({
             )}
           >
             <Zap size={15} fill="currentColor" />
-            {URGENCY_LABELS[data.urgency]} Blood Request
+            {data.requestType === "RECIPIENT"
+              ? `${URGENCY_LABELS[data.urgency]} Patient Appeal`
+              : `${URGENCY_LABELS[data.urgency]} Blood Request`}
           </div>
 
           <h1 className="mt-5 flex flex-col text-[clamp(2.2rem,4.5vw,3.4rem)] font-black leading-[0.92] tracking-[-0.055em]">
@@ -468,6 +470,10 @@ export function RequestPoster({
             <p className="text-[11px] text-white/80">
               {data.institutionName
                 ? `${data.institutionName} · Every drop counts.`
+                : data.patientName
+                ? `Appeal for ${data.patientName} · Every drop counts.`
+                : data.creatorName
+                ? `Appeal by ${data.creatorName} · Every drop counts.`
                 : "Every drop counts."}
               {data.status && data.status !== "OPEN"
                 ? ` · ${STATUS_LABELS[data.status]}`

@@ -1,20 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   AlertCircle,
   Ban,
   CalendarClock,
   CheckCircle2,
+  Clock,
   Droplet,
   Eye,
+  Hospital,
   Loader2,
   MoreHorizontal,
   Pencil,
   Plus,
   RefreshCw,
   RotateCcw,
+  User,
+  Zap,
 } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { toast } from "sonner";
@@ -86,24 +90,43 @@ export function RequestsView() {
   );
 
   const roleLower = (user?.role || "").toLowerCase();
-  const allowed = roleLower.includes("bank") || user?.role === "SUPER_ADMIN";
+  const isRecipient = roleLower.includes("recip");
+  const isBloodBank = roleLower.includes("bank");
+  const isAdmin = user?.role === "SUPER_ADMIN";
+  const allowed = isBloodBank || isRecipient || isAdmin;
 
   const { data, isPending, error, refetch } = useMyRequests();
   const requests = useMemo(() => data?.data ?? [], [data]);
 
   const statusMutation = useSetRequestStatus();
-  const setStatus = (id: string, status: BloodRequestStatus, label: string) =>
-    statusMutation.mutate(
-      { id, status },
-      {
-        onSuccess: () => toast.success(`Request ${label}`),
-        onError: (err) =>
-          toast.error("Status update failed", {
-            description:
-              err instanceof Error ? err.message : "Please try again.",
-          }),
-      }
-    );
+  const setStatus = useCallback(
+    (id: string, status: BloodRequestStatus, label: string) =>
+      statusMutation.mutate(
+        { id, status },
+        {
+          onSuccess: () => toast.success(`Request ${label}`),
+          onError: (err) =>
+            toast.error("Status update failed", {
+              description:
+                err instanceof Error ? err.message : "Please try again.",
+            }),
+        }
+      ),
+    [statusMutation]
+  );
+
+  // Summary KPI statistics
+  const stats = useMemo(() => {
+    const total = requests.length;
+    const emergency = requests.filter(
+      (r) => r.urgency === "EMERGENCY" && r.status !== "CANCELLED"
+    ).length;
+    const active = requests.filter(
+      (r) => r.status === "OPEN" || r.status === "PARTIALLY_FULFILLED"
+    ).length;
+    const fulfilled = requests.filter((r) => r.status === "FULFILLED").length;
+    return { total, emergency, active, fulfilled };
+  }, [requests]);
 
   const columns = useMemo<ColumnDef<BloodRequest, unknown>[]>(
     () => [
@@ -118,14 +141,66 @@ export function RequestsView() {
                 <Droplet className="h-4 w-4 fill-primary" />
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold">
-                  {BLOOD_GROUP_LABELS[r.bloodGroup] ?? r.bloodGroup} ·{" "}
-                  {r.unitsRequired}{" "}
-                  {r.unitsRequired === 1 ? "unit" : "units"}
-                </p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-semibold">
+                    {BLOOD_GROUP_LABELS[r.bloodGroup] ?? r.bloodGroup} ·{" "}
+                    {r.unitsRequired}{" "}
+                    {r.unitsRequired === 1 ? "unit" : "units"}
+                  </p>
+                  {isAdmin && (
+                    <Badge
+                      variant="outline"
+                      className={`text-[10px] ${
+                        r.requestType === "RECIPIENT"
+                          ? "border-rose-300 text-rose-700 bg-rose-50"
+                          : "border-blue-300 text-blue-700 bg-blue-50"
+                      }`}
+                    >
+                      {r.requestType === "RECIPIENT" ? "Recipient" : "Bank"}
+                    </Badge>
+                  )}
+                </div>
                 <p className="truncate text-xs text-muted-foreground">
                   {COMPONENT_LABELS[r.component] ?? r.component}
                 </p>
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        id: "patientHospital",
+        header: "Patient / Venue",
+        cell: ({ row }) => {
+          const r = row.original;
+          if (r.requestType === "RECIPIENT" || r.patientName) {
+            return (
+              <div className="space-y-0.5 text-xs">
+                <div className="flex items-center gap-1 font-medium text-foreground">
+                  <User className="h-3 w-3 text-muted-foreground" />
+                  <span className="truncate">{r.patientName || "Patient (Self)"}</span>
+                  {r.relationshipToPatient && (
+                    <span className="text-[10px] text-muted-foreground">
+                      ({r.relationshipToPatient})
+                    </span>
+                  )}
+                </div>
+                {r.hospitalName && (
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <Hospital className="h-3 w-3 text-muted-foreground" />
+                    <span className="truncate">{r.hospitalName}</span>
+                  </div>
+                )}
+              </div>
+            );
+          }
+          return (
+            <div className="space-y-0.5 text-xs">
+              <div className="flex items-center gap-1 font-medium text-foreground">
+                <Hospital className="h-3 w-3 text-muted-foreground" />
+                <span className="truncate">
+                  {r.hospitalName || r.bloodBankProfile?.institutionName || "Collection Venue"}
+                </span>
               </div>
             </div>
           );
@@ -276,14 +351,13 @@ export function RequestsView() {
         },
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [isAdmin, setStatus]
   );
 
   if (userPending) return null;
   if (!allowed) {
     return (
-      <ForbiddenState message="Blood requests can only be managed by blood bank accounts." />
+      <ForbiddenState message="You need a blood bank or recipient account to manage blood requests." />
     );
   }
 
@@ -292,19 +366,91 @@ export function RequestsView() {
       {/* Page header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight">
-            Blood Requests
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-2xl font-bold tracking-tight">
+              {isRecipient
+                ? "My Blood Requests"
+                : isBloodBank
+                ? "Blood Bank Requests"
+                : "Blood Requests"}
+            </h1>
+            <Badge variant="outline" className="text-xs">
+              {isRecipient ? "Recipient Portal" : isBloodBank ? "Hospital Facility" : "Workspace"}
+            </Badge>
+          </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            Create and manage blood appeals posted by your institution.
+            {isRecipient
+              ? "Publish urgent appeals for blood requirements, monitor donor responses, and track fulfillment."
+              : isBloodBank
+              ? "Create and manage blood appeals posted by your institution."
+              : "Manage and oversee all recipient appeals and blood bank requests."}
           </p>
         </div>
         <Button asChild className="gap-2 self-start sm:self-auto">
           <Link href="/requests/create">
             <Plus className="h-4 w-4" />
-            New Request
+            {isRecipient ? "Request Blood" : "New Request"}
           </Link>
         </Button>
+      </div>
+
+      {/* KPI Stats Cards */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Card className="border-border/80 shadow-xs">
+          <CardContent className="flex items-center gap-3 p-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Droplet className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-display text-xl font-bold text-foreground">
+                {isPending ? "…" : stats.total}
+              </p>
+              <p className="text-xs font-medium text-muted-foreground">Total Requests</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/80 shadow-xs">
+          <CardContent className="flex items-center gap-3 p-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-600">
+              <Zap className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-display text-xl font-bold text-foreground">
+                {isPending ? "…" : stats.emergency}
+              </p>
+              <p className="text-xs font-medium text-muted-foreground">Emergency</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/80 shadow-xs">
+          <CardContent className="flex items-center gap-3 p-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+              <Clock className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-display text-xl font-bold text-foreground">
+                {isPending ? "…" : stats.active}
+              </p>
+              <p className="text-xs font-medium text-muted-foreground">Active / Open</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/80 shadow-xs">
+          <CardContent className="flex items-center gap-3 p-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
+              <CheckCircle2 className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-display text-xl font-bold text-foreground">
+                {isPending ? "…" : stats.fulfilled}
+              </p>
+              <p className="text-xs font-medium text-muted-foreground">Fulfilled</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Loading */}

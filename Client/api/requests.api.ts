@@ -57,8 +57,9 @@ export interface BloodRequest {
   _count?: { responses: number; donations: number };
 }
 
-/** Payload shared by create + update — requestType is fixed server-side per caller. */
+/** Payload shared by create + update. */
 export interface BloodRequestInput {
+  requestType?: RequestType;
   bloodGroup: BloodGroup;
   component?: BloodComponent;
   unitsRequired: number;
@@ -80,6 +81,7 @@ export interface BloodRequestInput {
 }
 
 export interface ListRequestsParams {
+  requestType?: RequestType;
   status?: BloodRequestStatus;
   urgency?: BloodUrgency;
   bloodGroup?: BloodGroup;
@@ -89,11 +91,11 @@ export interface ListRequestsParams {
 }
 
 export const requestsApi = {
-  /** The caller's own blood bank requests. */
+  /** The caller's own requests (recipient or blood bank). */
   listMine: (params: ListRequestsParams = {}) => {
     const qs = new URLSearchParams();
     qs.set("mine", "true");
-    qs.set("requestType", "BLOOD_BANK");
+    if (params.requestType) qs.set("requestType", params.requestType);
     if (params.status) qs.set("status", params.status);
     if (params.urgency) qs.set("urgency", params.urgency);
     if (params.bloodGroup) qs.set("bloodGroup", params.bloodGroup);
@@ -110,8 +112,8 @@ export const requestsApi = {
 
   createRequest: (input: BloodRequestInput) =>
     api.post<{ request: BloodRequest }>(`/api/v1/requests`, {
+      requestType: input.requestType ?? "RECIPIENT",
       ...input,
-      requestType: "BLOOD_BANK",
     }),
 
   updateRequest: (id: string, input: BloodRequestInput) =>

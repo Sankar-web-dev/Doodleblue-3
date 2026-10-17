@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -30,7 +30,7 @@ export function useSignup() {
     queryFn: () => authService.signupRoles(),
     staleTime: 60_000,
   });
-  const roles = signupRoles ?? [];
+  const roles = useMemo(() => signupRoles ?? [], [signupRoles]);
 
   // Auto-select Blood Donar role by default if available and no role selected yet
   useEffect(() => {
@@ -41,7 +41,9 @@ export function useSignup() {
           r.name.toLowerCase().includes("donor")
       );
       if (donorRole) {
-        setRoleId(donorRole.id);
+        queueMicrotask(() => {
+          setRoleId(donorRole.id);
+        });
       }
     }
   }, [roles, roleId]);

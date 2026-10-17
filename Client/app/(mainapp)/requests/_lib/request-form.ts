@@ -6,6 +6,7 @@ import type {
   BloodRequestInput,
   BloodRequestStatus,
   BloodUrgency,
+  RequestType,
 } from "@/api/requests.api";
 
 // ---------------------------------------------------------------------------
@@ -82,6 +83,7 @@ export const STATUS_LABELS: Record<BloodRequestStatus, string> = {
 // ---------------------------------------------------------------------------
 
 export const bloodRequestFormSchema = z.object({
+  requestType: z.enum(["RECIPIENT", "BLOOD_BANK"]).optional(),
   bloodGroup: z.string().min(1, "Select a blood group"),
   component: z.enum([
     "WHOLE_BLOOD",
@@ -124,6 +126,7 @@ export const bloodRequestFormSchema = z.object({
 export type BloodRequestFormValues = z.infer<typeof bloodRequestFormSchema>;
 
 export const BLOOD_REQUEST_FORM_DEFAULTS: BloodRequestFormValues = {
+  requestType: "RECIPIENT",
   bloodGroup: "",
   component: "WHOLE_BLOOD",
   unitsRequired: 1,
@@ -165,6 +168,7 @@ export function toRequestInput(
   values: BloodRequestFormValues
 ): BloodRequestInput {
   return {
+    requestType: values.requestType,
     bloodGroup: values.bloodGroup as BloodGroup,
     component: values.component,
     unitsRequired: values.unitsRequired,
@@ -189,6 +193,7 @@ export function toRequestInput(
 /** API request → form values for the edit page. */
 export function fromRequest(request: BloodRequest): BloodRequestFormValues {
   return {
+    requestType: request.requestType,
     bloodGroup: request.bloodGroup,
     component: request.component ?? "WHOLE_BLOOD",
     unitsRequired: request.unitsRequired,
@@ -215,6 +220,8 @@ export function fromRequest(request: BloodRequest): BloodRequestFormValues {
 // ---------------------------------------------------------------------------
 
 export interface RequestPosterData {
+  requestType?: RequestType;
+  creatorName?: string | null;
   institutionName?: string | null;
   bloodGroup: BloodGroup | string;
   component: BloodComponent;
@@ -240,9 +247,12 @@ export interface RequestPosterData {
 
 export function posterDataFromValues(
   values: BloodRequestFormValues,
-  institutionName?: string | null
+  institutionName?: string | null,
+  creatorName?: string | null
 ): RequestPosterData {
   return {
+    requestType: values.requestType,
+    creatorName,
     institutionName,
     bloodGroup: values.bloodGroup,
     component: values.component,
@@ -269,6 +279,8 @@ export function posterDataFromRequest(
   request: BloodRequest
 ): RequestPosterData {
   return {
+    requestType: request.requestType,
+    creatorName: request.creator?.name,
     institutionName: request.bloodBankProfile?.institutionName,
     bloodGroup: request.bloodGroup,
     component: request.component,
