@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ApiException } from '../common/api-error.js';
 import {
+  assertDonorCanDonate,
   requireDonorProfile,
   toDateInput,
 } from '../common/inputs.js';
@@ -70,7 +71,7 @@ export class DonationsService {
       }
       const donor = await this.prisma.donorProfile.findUnique({
         where: { id: donorProfileId },
-        select: { id: true },
+        select: { id: true, profileCompleted: true, isAvailable: true },
       });
       if (!donor) {
         throw new ApiException(
@@ -79,6 +80,7 @@ export class DonationsService {
           'Donor profile not found',
         );
       }
+      assertDonorCanDonate(donor);
     } else {
       const donor = await requireDonorProfile(this.prisma, user.id);
       donorProfileId = donor.id;

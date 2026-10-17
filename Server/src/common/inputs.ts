@@ -33,7 +33,8 @@ export function toDateInput(
 
 /**
  * Loads the caller's donor profile or throws — donor-gated actions
- * (respond, donate, book) all require one.
+ * (respond, donate, book) all require one, and the profile must have
+ * finished the onboarding health screening and be marked available.
  */
 export async function requireDonorProfile(
   prisma: PrismaService,
@@ -41,7 +42,7 @@ export async function requireDonorProfile(
 ) {
   const donor = await prisma.donorProfile.findUnique({
     where: { userId },
-    select: { id: true },
+    select: { id: true, profileCompleted: true, isAvailable: true },
   });
   if (!donor) {
     throw new ApiException(
@@ -50,7 +51,32 @@ export async function requireDonorProfile(
       'Complete your donor profile first',
     );
   }
+  assertDonorCanDonate(donor);
   return donor;
+}
+
+/**
+ * Blocks donation actions for donors who never finished the onboarding
+ * health screening, or whose profile is deferred / marked unavailable.
+ */
+export function assertDonorCanDonate(donor: {
+  profileCompleted: boolean;
+  isAvailable: boolean;
+}): void {
+  if (!donor.profileCompleted) {
+    throw new ApiException(
+      403,
+      'DONOR_ONBOARDING_INCOMPLETE',
+      'Finish the donor onboarding health screening before donating blood',
+    );
+  }
+  if (!donor.isAvailable) {
+    throw new ApiException(
+      403,
+      'DONOR_NOT_AVAILABLE',
+      'Your donor profile is deferred or marked unavailable — update it before donating',
+    );
+  }
 }
 
 /** Owner or a role holding users:update can manage the record. */
