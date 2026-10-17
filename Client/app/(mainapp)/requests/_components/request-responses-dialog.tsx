@@ -1,13 +1,20 @@
 "use client";
 
+import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Droplet, HeartHandshake, Loader2 } from "lucide-react";
+import {
+  CalendarClock,
+  Droplet,
+  HeartHandshake,
+  Loader2,
+} from "lucide-react";
 
 import {
   DonorResponseStatus,
   responsesApi,
 } from "@/api/responses.api";
+import { appointmentsApi } from "@/api/appointments.api";
 import { ApiRequestError } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,11 +41,12 @@ const STATUS_LABELS: Record<DonorResponseStatus, string> = {
   CANCELLED: "Withdrawn",
 };
 
+// Scheduling happens on the dedicated /appointments/create route — only
+// non-scheduling status steps go through updateResponse directly.
 const NEXT_STEP: Partial<
   Record<DonorResponseStatus, { status: DonorResponseStatus; label: string }>
 > = {
   INTERESTED: { status: "CONTACTED", label: "Mark contacted" },
-  CONTACTED: { status: "APPOINTMENT_SCHEDULED", label: "Schedule appointment" },
   APPOINTMENT_SCHEDULED: { status: "COMPLETED", label: "Mark completed" },
 };
 
@@ -72,11 +80,26 @@ export function RequestResponsesDialog({
   });
   const responses = data?.data ?? [];
 
+  // Appointments for this request — lets us link a scheduled response to
+  // its slot for rescheduling.
+  const { data: apptData } = useQuery({
+    queryKey: ["appointments", "request", requestId],
+    queryFn: () => appointmentsApi.listForRequest(requestId!, { limit: 100 }),
+    enabled: !!requestId,
+  });
+  const appointmentByDonor = new Map(
+    (apptData?.data ?? [])
+      .filter((a) => a.status === "SCHEDULED" || a.status === "CONFIRMED")
+      .map((a) => [a.donorProfileId, a])
+  );
+
   const advanceMutation = useMutation({
     mutationFn: (args: { id: string; status: DonorResponseStatus }) =>
       responsesApi.updateResponse(args.id, {
         status: args.status,
-        contactedAt: new Date().toISOString(),
+        ...(args.status === "CONTACTED"
+          ? { contactedAt: new Date().toISOString() }
+          : {}),
       }),
     onSuccess: () => {
       toast.success("Response updated");
@@ -165,6 +188,37 @@ export function RequestResponsesDialog({
                 )}
               </div>
 
+              {(r.status === "INTERESTED" || r.status === "CONTACTED") && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 shrink-0 gap-1.5 text-xs"
+                  asChild
+                >
+                  <Link
+                    href={`/appointments/create?request=${r.requestId}&donor=${r.donorProfileId}&name=${encodeURIComponent(r.donor?.user?.name ?? "")}`}
+                  >
+                    <CalendarClock className="h-3.5 w-3.5" />
+                    Schedule appointment
+                  </Link>
+                </Button>
+              )}
+              {r.status === "APPOINTMENT_SCHEDULED" &&
+                appointmentByDonor.get(r.donorProfileId) && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 shrink-0 gap-1.5 text-xs"
+                    asChild
+                  >
+                    <Link
+                      href={`/appointments/${appointmentByDonor.get(r.donorProfileId)!.id}/edit?request=${r.requestId}&name=${encodeURIComponent(r.donor?.user?.name ?? "")}`}
+                    >
+                      <CalendarClock className="h-3.5 w-3.5" />
+                      Reschedule
+                    </Link>
+                  </Button>
+                )}
               {next && (
                 <Button
                   size="sm"

@@ -34,6 +34,14 @@ export class CreateAppointmentDto {
   @IsOptional()
   @IsUUID()
   donationId?: string;
+
+  /**
+   * Optional — request owner/admin scheduling on a donor's behalf.
+   * When omitted, the caller books for themselves as a donor.
+   */
+  @IsOptional()
+  @IsUUID()
+  donorProfileId?: string;
 }
 
 export class UpdateAppointmentDto {

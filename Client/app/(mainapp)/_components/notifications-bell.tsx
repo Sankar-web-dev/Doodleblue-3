@@ -90,7 +90,33 @@ export function NotificationsBell() {
 
   const markReadMutation = useMutation({
     mutationFn: (id: string) => notificationsApi.markRead(id),
+    // Reflect "read" instantly — the sheet's cached list would otherwise show
+    // the unread dot until a background refetch completes.
+    onMutate: async (id) => {
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: NOTIFICATIONS_KEY }),
+        queryClient.cancelQueries({ queryKey: NOTIFICATIONS_UNREAD_KEY }),
+      ]);
+      queryClient.setQueryData(
+        NOTIFICATIONS_KEY,
+        (old: { data: AppNotification[] } | undefined) =>
+          old && {
+            ...old,
+            data: old.data.map((item) =>
+              item.id === id
+                ? { ...item, isRead: true, readAt: new Date().toISOString() }
+                : item
+            ),
+          }
+      );
+      queryClient.setQueryData(
+        NOTIFICATIONS_UNREAD_KEY,
+        (old: { count: number } | undefined) =>
+          old && { count: Math.max(0, old.count - 1) }
+      );
+    },
     onSuccess: invalidate,
+    onError: invalidate,
   });
   const markAllMutation = useMutation({
     mutationFn: () => notificationsApi.markAllRead(),
@@ -169,7 +195,10 @@ export function NotificationsBell() {
               {notifications.map((n) => {
                 const Icon = TYPE_ICONS[n.type] ?? Info;
                 const requestId = requestIdFromLink(n.link);
-                const canView = n.type === "BLOOD_REQUEST" && !!requestId;
+                const href = requestId
+                  ? `/notification/${requestId}`
+                  : (n.link ?? null);
+                const canView = !!href;
                 return (
                   <li
                     key={n.id}
@@ -210,7 +239,7 @@ export function NotificationsBell() {
                             asChild
                           >
                             <Link
-                              href={`/notification/${requestId}`}
+                              href={href!}
                               onClick={() => handleView(n)}
                             >
                               <Eye className="h-3.5 w-3.5" />

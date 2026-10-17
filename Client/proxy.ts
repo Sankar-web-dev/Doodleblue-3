@@ -37,5 +37,6 @@ export const config = {
     "/notification/:path*",
     "/respond/:path*",
     "/responses/:path*",
+    "/appointments/:path*",
   ],
 };

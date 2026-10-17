@@ -77,10 +77,12 @@ export default function SignupPage() {
   const roles = signupRoles ?? [];
 
   // Auto-select Blood Donar role by default once roles load (render-time adjust).
-  const [prevRoles, setPrevRoles] = useState(roles);
-  if (roles !== prevRoles) {
-    setPrevRoles(roles);
-    if (!roleId && roles.length > 0) {
+  // NB: `roles` falls back to a fresh [] until data arrives — the length check
+  // must run before the identity compare or it loops forever.
+  const [pickedRoles, setPickedRoles] = useState<typeof roles | null>(null);
+  if (roles.length > 0 && roles !== pickedRoles) {
+    setPickedRoles(roles);
+    if (!roleId) {
       const donorRole = roles.find(
         (r) =>
           r.name.toLowerCase().includes("dona") ||

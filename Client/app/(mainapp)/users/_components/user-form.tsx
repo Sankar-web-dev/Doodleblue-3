@@ -71,11 +71,13 @@ export function UserForm({ user }: UserFormProps) {
     }
   }
 
-  // When roles load, if user has roleId or role name, ensure roleId is matched accurately.
-  const [prevRoles, setPrevRoles] = useState(roles);
-  if (roles !== prevRoles || user !== prevUser) {
-    setPrevRoles(roles);
-    if (roles.length > 0 && user) {
+  // When roles load, if user has roleId or role name, ensure roleId is matched
+  // accurately. `roles` is a fresh [] until the query resolves, so the length
+  // check must precede the identity compare to avoid a render loop.
+  const [syncedRoles, setSyncedRoles] = useState<typeof roles | null>(null);
+  if (roles.length > 0 && (roles !== syncedRoles || user !== prevUser)) {
+    setSyncedRoles(roles);
+    if (user) {
       if (user.roleId && roles.some((r) => r.id === user.roleId)) {
         setRoleId(user.roleId);
       } else if (user.role) {
