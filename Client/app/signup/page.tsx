@@ -101,12 +101,14 @@ export default function SignupPage() {
       setFormError(null);
 
       toast.success(`Welcome, ${user.name.split(" ")[0]}`, {
-        description: "Your account is ready. Let's complete your donor onboarding.",
+        description: "Your account is ready. Let's complete your onboarding.",
       });
 
       const roleLower = (user.role || "").toLowerCase();
       if (roleLower.includes("dona") || roleLower.includes("donor")) {
         router.replace("/onboarding/donor");
+      } else if (roleLower.includes("recipient")) {
+        router.replace("/onboarding/recipient");
       } else {
         router.replace("/dashboard");
       }
