@@ -88,8 +88,8 @@ export const DONOR_ONBOARDING_DEFAULTS: DonorOnboardingFormValues = {
   pincode: "",
 
   bloodGroup: "O_POSITIVE",
-  heightCm: 172,
-  weightKg: 65,
+  heightCm: 0,
+  weightKg: 0,
   donatedBefore: false,
   previousDonationCount: 0,
   lastDonationDate: "",
