@@ -101,7 +101,7 @@ export default function SignupPage() {
       setFormError(null);
 
       toast.success(`Welcome, ${user.name.split(" ")[0]}`, {
-        description: "Your account is ready.",
+        description: "Your account is ready. Let's complete your onboarding.",
       });
 
       const roleLower = (user.role || "").toLowerCase();
@@ -109,6 +109,8 @@ export default function SignupPage() {
         router.replace("/onboarding/blood-bank");
       } else if (roleLower.includes("dona") || roleLower.includes("donor")) {
         router.replace("/onboarding/donor");
+      } else if (roleLower.includes("recipient")) {
+        router.replace("/onboarding/recipient");
       } else {
         router.replace("/dashboard");
       }

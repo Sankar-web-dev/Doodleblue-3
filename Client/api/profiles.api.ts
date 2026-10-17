@@ -110,6 +110,18 @@ export interface BloodBankProfile {
   updatedAt?: string;
 }
 
+export type RegistrationFor = "SELF" | "SOMEONE_ELSE";
+
+export interface RecipientProfile {
+  id?: string;
+  userId?: string;
+  registrationFor?: RegistrationFor;
+  relationshipToPatient?: string | null;
+  profileCompleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export const profilesApi = {
   // Personal Profile
   getPersonalProfile: () =>
@@ -136,6 +148,18 @@ export const profilesApi = {
       "/api/v1/profiles/blood-bank/me",
       dto
     ),
+
+  // Recipient Profile
+  getRecipientProfile: () =>
+    api.get<{ profile: RecipientProfile | null }>(
+      "/api/v1/profiles/recipient/me"
+    ),
+
+  upsertRecipientProfile: (dto: Partial<RecipientProfile>) =>
+    api.put<{ profile: RecipientProfile }>(
+      "/api/v1/profiles/recipient/me",
+      dto
+    ),
 };
 
 export const PROFILES_PERSONAL_KEY = ["profiles", "personal", "me"] as const;
@@ -145,3 +169,4 @@ export const PROFILES_BLOOD_BANK_KEY = [
   "blood-bank",
   "me",
 ] as const;
+export const PROFILES_RECIPIENT_KEY = ["profiles", "recipient", "me"] as const;

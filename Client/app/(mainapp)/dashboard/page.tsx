@@ -34,6 +34,7 @@ import {
   PROFILES_BLOOD_BANK_KEY,
   PROFILES_DONOR_KEY,
   PROFILES_PERSONAL_KEY,
+  PROFILES_RECIPIENT_KEY,
 } from "@/api/profiles.api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -66,6 +67,9 @@ export default function DashboardPage() {
   const roleLower = (user?.role || "").toLowerCase();
   const isDonor = roleLower.includes("dona") || roleLower.includes("donor");
   const isBloodBank = roleLower.includes("bank");
+  const isRecipient = (user?.role || "")
+    .toLowerCase()
+    .includes("recipient");
 
   // Admin stats
   const { data: usersData, isPending: usersPending } = useUsers();
@@ -78,11 +82,20 @@ export default function DashboardPage() {
     enabled: isDonor,
   });
 
+  // Recipient queries
+  const { data: recipientData, isPending: recipientPending } = useQuery({
+    queryKey: PROFILES_RECIPIENT_KEY,
+    queryFn: () => profilesApi.getRecipientProfile().then((res) => res.profile),
+    enabled: isRecipient,
+  });
+
   const { data: personalData, isPending: personalPending } = useQuery({
     queryKey: PROFILES_PERSONAL_KEY,
     queryFn: () => profilesApi.getPersonalProfile().then((res) => res.profile),
-    enabled: isDonor,
+    enabled: isDonor || isRecipient,
   });
+
+
 
   // Blood bank query
   const { data: bankData, isPending: bankPending } = useQuery({
@@ -631,6 +644,277 @@ export default function DashboardPage() {
                   <p className="text-muted-foreground">
                     Verified institutions can raise blood requests and manage
                     donor coordination.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // RECIPIENT DASHBOARD VIEW
+  // -------------------------------------------------------------------------
+  if (isRecipient) {
+    const isRecipientLoading = recipientPending || personalPending;
+    const profileCompleted = !!recipientData?.profileCompleted;
+    const registrationLabel =
+      recipientData?.registrationFor === "SOMEONE_ELSE"
+        ? "Someone Else"
+        : "Myself";
+
+    return (
+      <div className="flex flex-col gap-8">
+        {/* Recipient Greeting */}
+        <div className="animate-fade-up flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h1 className="font-display text-3xl font-bold tracking-tight">
+                {greeting()}, {firstName}
+              </h1>
+              <Badge variant="outline" className="border-primary/40 text-primary">
+                Blood Recipient
+              </Badge>
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {new Date().toLocaleDateString(undefined, {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })}{" "}
+              — Welcome to your Recipient Care Portal.
+            </p>
+          </div>
+
+          <Link href="/onboarding/recipient">
+            <Button variant="outline" className="gap-2 border-border/80">
+              <FileEdit className="h-4 w-4" />
+              {profileCompleted ? "Update Details" : "Complete Onboarding"}
+            </Button>
+          </Link>
+        </div>
+
+        {/* Incomplete Onboarding Banner */}
+        {!isRecipientLoading && !profileCompleted && (
+          <Card className="animate-fade-up border-primary/40 bg-primary/5 shadow-xs">
+            <CardContent className="flex flex-col items-start justify-between gap-4 p-6 sm:flex-row sm:items-center">
+              <div className="flex items-start gap-3.5">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-display text-base font-bold text-foreground">
+                    Recipient Onboarding Incomplete
+                  </h3>
+                  <p className="mt-0.5 text-xs text-muted-foreground max-w-xl">
+                    Please complete your 3-step recipient registration stepper
+                    form. Once verified, you can create blood requests and get
+                    matched with donors and blood banks.
+                  </p>
+                </div>
+              </div>
+              <Link href="/onboarding/recipient">
+                <Button className="shrink-0 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold gap-2">
+                  Launch Onboarding Stepper <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Recipient Stat Cards */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {/* Registration For */}
+          <Card className="animate-fade-up border-border/80 shadow-xs">
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <HeartHandshake className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-display text-xl font-bold leading-none tracking-tight">
+                  {isRecipientLoading ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  ) : (
+                    registrationLabel
+                  )}
+                </p>
+                <p className="mt-1 text-xs font-medium text-muted-foreground">Registering For</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Status */}
+          <Card className="animate-fade-up border-border/80 shadow-xs">
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${
+                profileCompleted ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-amber-500/10 text-amber-600"
+              }`}>
+                {profileCompleted ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
+              </div>
+              <div className="min-w-0">
+                <p className="font-display text-xl font-bold leading-none tracking-tight">
+                  {isRecipientLoading ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  ) : profileCompleted ? (
+                    "Active Recipient"
+                  ) : (
+                    "Incomplete"
+                  )}
+                </p>
+                <p className="mt-1 text-xs font-medium text-muted-foreground">
+                  {profileCompleted ? "Ready to request" : "Onboarding pending"}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Relationship */}
+          <Card className="animate-fade-up border-border/80 shadow-xs">
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-tertiary/15 text-tertiary">
+                <Users className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-display text-xl font-bold leading-none tracking-tight">
+                  {isRecipientLoading ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  ) : recipientData?.registrationFor === "SOMEONE_ELSE" ? (
+                    recipientData?.relationshipToPatient || "—"
+                  ) : (
+                    "Self"
+                  )}
+                </p>
+                <p className="mt-1 text-xs font-medium text-muted-foreground">Patient Relationship</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Location */}
+          <Card className="animate-fade-up border-border/80 shadow-xs">
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                <MapPin className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-display text-xl font-bold leading-none tracking-tight truncate">
+                  {isRecipientLoading ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  ) : personalData?.city ? (
+                    `${personalData.city}${personalData.state ? `, ${personalData.state}` : ""}`
+                  ) : (
+                    "—"
+                  )}
+                </p>
+                <p className="mt-1 text-xs font-medium text-muted-foreground">Location</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {/* Recipient Profile Summary Card */}
+          <Card className="animate-fade-up border-border/80 lg:col-span-2 shadow-xs">
+            <CardHeader className="flex-row items-center justify-between pb-3">
+              <div>
+                <CardTitle className="text-lg">Recipient Identity &amp; Request Context</CardTitle>
+                <CardDescription>Details from your registration</CardDescription>
+              </div>
+              <Link href="/onboarding/recipient">
+                <Button size="sm" variant="ghost" className="text-xs text-primary gap-1">
+                  Edit <ArrowRight className="h-3 w-3" />
+                </Button>
+              </Link>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-1">
+              <div className="grid grid-cols-2 gap-4 rounded-xl border border-border/70 bg-muted/20 p-4 sm:grid-cols-3">
+                <div>
+                  <span className="text-[11px] font-semibold uppercase text-muted-foreground">Registering For</span>
+                  <p className="mt-0.5 text-sm font-bold text-foreground">{registrationLabel}</p>
+                </div>
+                <div>
+                  <span className="text-[11px] font-semibold uppercase text-muted-foreground">Relationship</span>
+                  <p className="mt-0.5 text-sm font-bold text-foreground">
+                    {recipientData?.registrationFor === "SOMEONE_ELSE"
+                      ? recipientData?.relationshipToPatient || "—"
+                      : "Self"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-[11px] font-semibold uppercase text-muted-foreground">Contact Phone</span>
+                  <p className="mt-0.5 text-sm font-bold text-foreground">
+                    {personalData?.phoneNumber || "—"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-[11px] font-semibold uppercase text-muted-foreground">Location</span>
+                  <p className="mt-0.5 text-sm font-bold text-foreground">
+                    {personalData?.city ? `${personalData.city}, ${personalData.state}` : "—"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-[11px] font-semibold uppercase text-muted-foreground">Pincode</span>
+                  <p className="mt-0.5 text-sm font-bold text-foreground">
+                    {personalData?.pincode || "—"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-[11px] font-semibold uppercase text-muted-foreground">Profile Status</span>
+                  <p className="mt-0.5 text-sm font-bold text-foreground">
+                    {profileCompleted ? "Completed" : "Incomplete"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Guidance Box */}
+              <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 text-xs text-muted-foreground">
+                <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <div>
+                  <span className="font-semibold text-foreground">Requesting Blood:</span>
+                  <p className="mt-0.5">
+                    Keep your recipient details current so verified donors and blood
+                    banks can respond to your requests quickly. You can update them
+                    anytime from the onboarding stepper.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions & Links */}
+          <Card className="animate-fade-up border-border/80 shadow-xs">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Quick Actions</CardTitle>
+              <CardDescription>Recipient portal navigation</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 pt-1">
+              <Link
+                href="/onboarding/recipient"
+                className="group flex items-center gap-3 rounded-xl border border-border/80 p-3.5 transition-all hover:border-primary/40 hover:bg-muted/40"
+              >
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Activity className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate">Onboarding Stepper</p>
+                  <p className="text-xs text-muted-foreground truncate">Update recipient details</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+              </Link>
+
+              <div className="rounded-xl border border-border/80 bg-muted/20 p-4 space-y-2">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Blood Requests
+                </h4>
+                <div className="space-y-1 text-xs">
+                  <p className="text-foreground font-semibold">
+                    {profileCompleted ? "Ready to create" : "Complete onboarding first"}
+                  </p>
+                  <p className="text-muted-foreground">
+                    Requests are matched with compatible donors in nearby authorized blood banks.
                   </p>
                 </div>
               </div>
