@@ -31,5 +31,6 @@ export const config = {
     "/roles/:path*",
     "/users/:path*",
     "/profile/:path*",
+    "/onboarding/:path*",
   ],
 };

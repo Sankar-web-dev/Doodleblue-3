@@ -1,13 +1,13 @@
 "use client";
 
 import { FormProvider } from "react-hook-form";
-import { Loader2 } from "lucide-react";
+import { Droplet, Loader2 } from "lucide-react";
 
 import { useDonorOnboarding } from "../_hooks/use-donor-onboarding";
 import { ONBOARDING_STEPS } from "../_lib/constants";
-import { OnboardingHeader } from "./onboarding-header";
-import { OnboardingStepper } from "./onboarding-stepper";
-import { StepNavigation } from "./step-navigation";
+import { OnboardingHeader } from "../../_components/onboarding-header";
+import { OnboardingStepper } from "../../_components/onboarding-stepper";
+import { StepNavigation } from "../../_components/step-navigation";
 import { StepPersonalDetails } from "./steps/step-personal-details";
 import { StepPhysicalBlood } from "./steps/step-physical-blood";
 import { StepMedicalScreening } from "./steps/step-medical-screening";
@@ -41,7 +41,16 @@ export function DonorOnboardingWizard() {
   return (
     <div className="min-h-screen bg-ambient-mesh px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl space-y-8">
-        <OnboardingHeader isUpdateMode={isUpdateMode} />
+        <OnboardingHeader
+          icon={Droplet}
+          title="Blood Donor Onboarding"
+          updateTitle="Update Donor Health Details"
+          badge="Role: Blood Donar"
+          updateBadge="Update Health Mode"
+          description="Complete your clinical screening to activate donor status & save lives."
+          updateDescription="Edit and review your clinical screening parameters, availability, and preferences."
+          isUpdateMode={isUpdateMode}
+        />
 
         <OnboardingStepper
           steps={ONBOARDING_STEPS}
@@ -71,6 +80,8 @@ export function DonorOnboardingWizard() {
                 currentStep={currentStep}
                 totalSteps={totalSteps}
                 isUpdateMode={isUpdateMode}
+                reviewLabel="Evaluate Health & Screen"
+                updateReviewLabel="Review & Update Health"
                 onPrev={handlePrevStep}
                 onNext={handleNextStep}
               />

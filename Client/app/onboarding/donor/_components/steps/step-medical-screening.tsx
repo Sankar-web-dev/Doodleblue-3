@@ -12,8 +12,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { DonorOnboardingFormValues } from "../../_lib/donor-onboarding.schema";
-import { StepCard } from "../step-card";
-import { YesNoField } from "../yes-no-field";
+import { StepCard } from "../../../_components/step-card";
+import { YesNoField } from "../../../_components/yes-no-field";
 
 const detailBox = "space-y-2 rounded-lg border border-border/70 bg-muted/30 p-3";
 const detailBoxDanger =

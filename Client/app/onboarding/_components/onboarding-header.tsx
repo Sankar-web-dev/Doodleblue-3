@@ -1,34 +1,49 @@
 import Link from "next/link";
-import { Droplet, Home } from "lucide-react";
+import { Home, type LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface OnboardingHeaderProps {
+  icon: LucideIcon;
+  /** Title shown on first-time onboarding. */
+  title: string;
+  /** Title shown when editing an existing profile. */
+  updateTitle: string;
+  /** Role/mode badge for first-time onboarding. */
+  badge: string;
+  updateBadge: string;
+  description: string;
+  updateDescription: string;
   isUpdateMode: boolean;
 }
 
-/** Top banner — title, mode badge, and the dashboard escape link. */
-export function OnboardingHeader({ isUpdateMode }: OnboardingHeaderProps) {
+/** Top banner — icon, title, mode badge, and the dashboard escape link. */
+export function OnboardingHeader({
+  icon: Icon,
+  title,
+  updateTitle,
+  badge,
+  updateBadge,
+  description,
+  updateDescription,
+  isUpdateMode,
+}: OnboardingHeaderProps) {
   return (
     <div className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-border/80 bg-card/90 p-6 shadow-sm backdrop-blur-md sm:flex-row">
       <div className="flex items-center gap-3">
         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-xs">
-          <Droplet className="h-6 w-6 fill-primary" />
+          <Icon className="h-6 w-6 fill-primary" />
         </div>
         <div>
           <div className="flex items-center gap-2">
             <h1 className="font-display text-xl font-bold tracking-tight">
-              {isUpdateMode
-                ? "Update Donor Health Details"
-                : "Blood Donor Onboarding"}
+              {isUpdateMode ? updateTitle : title}
             </h1>
             <Badge variant="outline" className="border-primary/30 text-primary">
-              {isUpdateMode ? "Update Health Mode" : "Role: Blood Donar"}
+              {isUpdateMode ? updateBadge : badge}
             </Badge>
           </div>
           <p className="text-xs text-muted-foreground">
-            {isUpdateMode
-              ? "Edit and review your clinical screening parameters, availability, and preferences."
-              : "Complete your clinical screening to activate donor status & save lives."}
+            {isUpdateMode ? updateDescription : description}
           </p>
         </div>
       </div>

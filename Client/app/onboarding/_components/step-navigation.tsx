@@ -5,15 +5,21 @@ interface StepNavigationProps {
   currentStep: number;
   totalSteps: number;
   isUpdateMode: boolean;
+  /** Label on the last "Next" button (fresh onboarding). */
+  reviewLabel: string;
+  /** Label on the last "Next" button when editing an existing profile. */
+  updateReviewLabel: string;
   onPrev: () => void;
   onNext: () => void;
 }
 
-/** Sticky-style Previous / Next footer shown on steps 1–5. */
+/** Sticky-style Previous / Next footer shown on all steps before the review step. */
 export function StepNavigation({
   currentStep,
   totalSteps,
   isUpdateMode,
+  reviewLabel,
+  updateReviewLabel,
   onPrev,
   onNext,
 }: StepNavigationProps) {
@@ -40,8 +46,8 @@ export function StepNavigation({
       >
         {currentStep === totalSteps - 1
           ? isUpdateMode
-            ? "Review & Update Health"
-            : "Evaluate Health & Screen"
+            ? updateReviewLabel
+            : reviewLabel
           : "Next Step"}
         <ArrowRight className="h-4 w-4" />
       </Button>

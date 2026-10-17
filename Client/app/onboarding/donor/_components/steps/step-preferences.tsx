@@ -11,9 +11,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { DonorOnboardingFormValues } from "../../_lib/donor-onboarding.schema";
-import { StepCard } from "../step-card";
-import { FormField } from "../form-field";
-import { YesNoField } from "../yes-no-field";
+import { StepCard } from "../../../_components/step-card";
+import { FormField } from "../../../_components/form-field";
+import { YesNoField } from "../../../_components/yes-no-field";
 
 /** Step 5 — Availability & Travel Preferences. */
 export function StepPreferences() {

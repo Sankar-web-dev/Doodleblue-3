@@ -4,10 +4,10 @@ import { useFormContext } from "react-hook-form";
 import { AlertTriangle, Droplet, Scale } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import type { DonorOnboardingFormValues } from "../../_lib/donor-onboarding.schema";
-import { StepCard } from "../step-card";
-import { FormField } from "../form-field";
-import { IconInput } from "../icon-input";
-import { YesNoField } from "../yes-no-field";
+import { StepCard } from "../../../_components/step-card";
+import { FormField } from "../../../_components/form-field";
+import { IconInput } from "../../../_components/icon-input";
+import { YesNoField } from "../../../_components/yes-no-field";
 import { BloodGroupPicker } from "../blood-group-picker";
 
 /** Step 2 — Blood Group & Physical Parameters. */

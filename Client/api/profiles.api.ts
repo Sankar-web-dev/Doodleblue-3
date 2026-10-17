@@ -24,6 +24,20 @@ export type TravelPreference = "NEARBY" | "ANYWHERE";
 
 export type ContactPreference = "EMAIL" | "PHONE" | "BOTH";
 
+export type HospitalType = "GOVERNMENT" | "PRIVATE" | "TRUST" | "OTHER";
+
+export type ContactDesignation =
+  | "ADMIN"
+  | "DOCTOR"
+  | "BLOOD_BANK_OFFICER"
+  | "OTHER";
+
+export type VerificationStatus =
+  | "PENDING"
+  | "VERIFIED"
+  | "REJECTED"
+  | "SUSPENDED";
+
 export interface PersonalProfile {
   id?: string;
   userId?: string;
@@ -72,6 +86,30 @@ export interface DonorProfile {
   updatedAt?: string;
 }
 
+export interface BloodBankProfile {
+  id?: string;
+  userId?: string;
+  institutionName?: string | null;
+  hospitalType?: HospitalType;
+  hospitalPhone?: string | null;
+  website?: string | null;
+  contactPersonName?: string | null;
+  contactDesignation?: ContactDesignation;
+  contactPhone?: string | null;
+  officialEmail?: string | null;
+  addressLine?: string | null;
+  city?: string | null;
+  district?: string | null;
+  state?: string | null;
+  pincode?: string | null;
+  registrationNumber?: string | null;
+  verificationStatus?: VerificationStatus;
+  verificationNotes?: string | null;
+  verifiedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export const profilesApi = {
   // Personal Profile
   getPersonalProfile: () =>
@@ -86,7 +124,24 @@ export const profilesApi = {
 
   upsertDonorProfile: (dto: Partial<DonorProfile>) =>
     api.put<{ profile: DonorProfile }>("/api/v1/profiles/donor/me", dto),
+
+  // Blood Bank Profile
+  getBloodBankProfile: () =>
+    api.get<{ profile: BloodBankProfile | null }>(
+      "/api/v1/profiles/blood-bank/me"
+    ),
+
+  upsertBloodBankProfile: (dto: Partial<BloodBankProfile>) =>
+    api.put<{ profile: BloodBankProfile }>(
+      "/api/v1/profiles/blood-bank/me",
+      dto
+    ),
 };
 
 export const PROFILES_PERSONAL_KEY = ["profiles", "personal", "me"] as const;
 export const PROFILES_DONOR_KEY = ["profiles", "donor", "me"] as const;
+export const PROFILES_BLOOD_BANK_KEY = [
+  "profiles",
+  "blood-bank",
+  "me",
+] as const;

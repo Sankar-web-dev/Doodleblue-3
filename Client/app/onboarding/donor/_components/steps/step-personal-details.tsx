@@ -12,9 +12,9 @@ import {
 } from "@/components/ui/select";
 import type { DonorOnboardingFormValues } from "../../_lib/donor-onboarding.schema";
 import { calculateAge } from "../../_lib/eligibility";
-import { StepCard } from "../step-card";
-import { FormField } from "../form-field";
-import { IconInput } from "../icon-input";
+import { StepCard } from "../../../_components/step-card";
+import { FormField } from "../../../_components/form-field";
+import { IconInput } from "../../../_components/icon-input";
 
 /** Step 1 — Personal & Contact Details. */
 export function StepPersonalDetails() {

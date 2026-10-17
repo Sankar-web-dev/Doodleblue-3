@@ -5,19 +5,12 @@ import {
   Heart,
   ShieldCheck,
   User,
-  type LucideIcon,
 } from "lucide-react";
 import type { BloodGroup } from "@/api/profiles.api";
+import type { OnboardingStepMeta } from "../../_components/onboarding-stepper";
 import type { DonorOnboardingFormValues } from "./donor-onboarding.schema";
 
 export const TOTAL_STEPS = 6;
-
-export interface OnboardingStepMeta {
-  num: number;
-  title: string;
-  icon: LucideIcon;
-  desc: string;
-}
 
 export const ONBOARDING_STEPS: OnboardingStepMeta[] = [
   { num: 1, title: "Personal Details", icon: User, desc: "Identity & Location" },

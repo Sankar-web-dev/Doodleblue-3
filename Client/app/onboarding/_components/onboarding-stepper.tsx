@@ -1,6 +1,13 @@
 import { CheckCircle2 } from "lucide-react";
-import type { OnboardingStepMeta } from "../_lib/constants";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+export interface OnboardingStepMeta {
+  num: number;
+  title: string;
+  icon: LucideIcon;
+  desc: string;
+}
 
 interface OnboardingStepperProps {
   steps: OnboardingStepMeta[];
@@ -40,7 +47,12 @@ export function OnboardingStepper({
       </div>
 
       {/* Stepper Dots (Desktop) */}
-      <div className="mt-5 hidden grid-cols-6 gap-1.5 sm:grid">
+      <div
+        className="mt-5 hidden gap-1.5 sm:grid"
+        style={{
+          gridTemplateColumns: `repeat(${totalSteps}, minmax(0, 1fr))`,
+        }}
+      >
         {steps.map((s) => {
           const isDone = currentStep > s.num;
           const isCurrent = currentStep === s.num;

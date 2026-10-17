@@ -5,9 +5,9 @@ import { CheckCircle2, Heart, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { DonorOnboardingFormValues } from "../../_lib/donor-onboarding.schema";
-import { StepCard } from "../step-card";
-import { YesNoField } from "../yes-no-field";
-import { InfoBox } from "../info-box";
+import { StepCard } from "../../../_components/step-card";
+import { YesNoField } from "../../../_components/yes-no-field";
+import { InfoBox } from "../../../_components/info-box";
 
 const WELLNESS_ITEMS = [
   "I am feeling fit, healthy, and free from fever or active viral infections today.",

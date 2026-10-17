@@ -101,11 +101,13 @@ export default function SignupPage() {
       setFormError(null);
 
       toast.success(`Welcome, ${user.name.split(" ")[0]}`, {
-        description: "Your account is ready. Let's complete your donor onboarding.",
+        description: "Your account is ready.",
       });
 
       const roleLower = (user.role || "").toLowerCase();
-      if (roleLower.includes("dona") || roleLower.includes("donor")) {
+      if (roleLower.includes("bank")) {
+        router.replace("/onboarding/blood-bank");
+      } else if (roleLower.includes("dona") || roleLower.includes("donor")) {
         router.replace("/onboarding/donor");
       } else {
         router.replace("/dashboard");
@@ -306,14 +308,7 @@ export default function SignupPage() {
                   <SelectContent>
                     {roles.map((r) => (
                       <SelectItem key={r.id} value={r.id}>
-                        <div className="flex flex-col">
-                          <span>{r.name}</span>
-                          {r.description && (
-                            <span className="text-xs text-muted-foreground">
-                              {r.description}
-                            </span>
-                          )}
-                        </div>
+                        {r.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
