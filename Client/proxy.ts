@@ -33,5 +33,9 @@ export const config = {
     "/profile/:path*",
     "/onboarding/:path*",
     "/blood-banks/:path*",
+    "/requests/:path*",
+    "/notification/:path*",
+    "/respond/:path*",
+    "/responses/:path*",
   ],
 };

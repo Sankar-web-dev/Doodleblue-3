@@ -16,7 +16,16 @@ export function useConsoleNav(user: AuthUser | null): NavItem[] {
   const { can } = usePermissions(user);
 
   return useMemo(
-    () => NAV_ITEMS.filter((item) => !item.resource || can(item.resource, "read")),
-    [can]
+    () =>
+      NAV_ITEMS.filter((item) => {
+        if (item.resource && !can(item.resource, "read")) return false;
+        if (
+          item.roleIncludes &&
+          !(user?.role ?? "").toLowerCase().includes(item.roleIncludes)
+        )
+          return false;
+        return true;
+      }),
+    [can, user?.role]
   );
 }

@@ -8,6 +8,7 @@ import {
   SidebarTrigger,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { NotificationsBell } from "./_components/notifications-bell";
 import { SidebarBrand } from "./_components/sidebar-brand";
 import { SidebarNav } from "./_components/sidebar-nav";
 import { SidebarUserFooter } from "./_components/sidebar-user-footer";
@@ -36,6 +37,9 @@ export function ConsoleShell({
         <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-border/70 bg-background/80 px-4 backdrop-blur-md sm:px-6">
           <div className="flex items-center gap-3">
             <SidebarTrigger className="hover:bg-accent hover:text-accent-foreground" />
+          </div>
+          <div className="flex items-center gap-2">
+            <NotificationsBell />
           </div>
         </header>
 

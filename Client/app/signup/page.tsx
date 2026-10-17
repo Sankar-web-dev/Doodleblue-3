@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -76,8 +76,10 @@ export default function SignupPage() {
   });
   const roles = signupRoles ?? [];
 
-  // Auto-select Blood Donar role by default if available and no role selected yet
-  useEffect(() => {
+  // Auto-select Blood Donar role by default once roles load (render-time adjust).
+  const [prevRoles, setPrevRoles] = useState(roles);
+  if (roles !== prevRoles) {
+    setPrevRoles(roles);
     if (!roleId && roles.length > 0) {
       const donorRole = roles.find(
         (r) =>
@@ -88,7 +90,7 @@ export default function SignupPage() {
         setRoleId(donorRole.id);
       }
     }
-  }, [roles, roleId]);
+  }
 
   const signupMutation = useMutation({
     mutationFn: () =>

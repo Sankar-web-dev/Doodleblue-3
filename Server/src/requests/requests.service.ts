@@ -22,6 +22,24 @@ const REQUEST_INCLUDE = {
   _count: { select: { responses: true, donations: true } },
 } as const;
 
+const BLOOD_GROUP_LABELS: Record<string, string> = {
+  O_POSITIVE: 'O+',
+  O_NEGATIVE: 'O-',
+  A_POSITIVE: 'A+',
+  A_NEGATIVE: 'A-',
+  B_POSITIVE: 'B+',
+  B_NEGATIVE: 'B-',
+  AB_POSITIVE: 'AB+',
+  AB_NEGATIVE: 'AB-',
+  UNKNOWN: 'Any group',
+};
+
+const URGENCY_LABELS: Record<string, string> = {
+  EMERGENCY: 'Emergency',
+  WITHIN_24_HOURS: 'Needed within 24 hours',
+  SCHEDULED: 'Scheduled requirement',
+};
+
 @Injectable()
 export class RequestsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -77,7 +95,54 @@ export class RequestsService {
       include: REQUEST_INCLUDE,
     });
 
+    await this.notifyDonors(request.id, dto, user.id);
+
     return request;
+  }
+
+  /**
+   * In-app notification fan-out — every active donor (donor role or a donor
+   * profile on file) hears about a new blood request.
+   */
+  private async notifyDonors(
+    requestId: string,
+    dto: CreateBloodRequestDto,
+    creatorUserId: string,
+  ) {
+    const donors = await this.prisma.user.findMany({
+      where: {
+        isActive: true,
+        id: { not: creatorUserId },
+        OR: [
+          { role: { contains: 'dona', mode: 'insensitive' } },
+          { donorProfile: { isNot: null } },
+        ],
+      },
+      select: { id: true },
+    });
+    if (donors.length === 0) return;
+
+    const group = BLOOD_GROUP_LABELS[dto.bloodGroup] ?? dto.bloodGroup;
+    const requiredBy = dto.requiredBy
+      ? new Date(dto.requiredBy).toLocaleDateString('en-IN', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        })
+      : null;
+
+    await this.prisma.notification.createMany({
+      data: donors.map((donor) => ({
+        userId: donor.id,
+        type: 'BLOOD_REQUEST',
+        title: `${group} blood needed — ${dto.city}`,
+        message:
+          `${dto.unitsRequired} ${dto.unitsRequired === 1 ? 'unit' : 'units'} ` +
+          `required${requiredBy ? ` by ${requiredBy}` : ''} — ` +
+          `${URGENCY_LABELS[dto.urgency] ?? dto.urgency}`,
+        link: `/notification/${requestId}`,
+      })),
+    });
   }
 
   /** Browse requests — any authenticated user; filterable directory. */

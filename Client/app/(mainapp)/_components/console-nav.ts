@@ -1,5 +1,7 @@
 import {
   Building2,
+  Droplet,
+  HeartHandshake,
   LayoutDashboard,
   ShieldCheck,
   Users,
@@ -15,6 +17,11 @@ export type NavItem = {
    * Omit for items every authenticated user can see (e.g. Dashboard).
    */
   resource?: Resource;
+  /**
+   * Role-name substring (lowercase) gating this item — e.g. "bank" shows it
+   * only for blood bank accounts.
+   */
+  roleIncludes?: string;
 };
 
 /**
@@ -27,4 +34,6 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/roles",     label: "Roles",     icon: ShieldCheck,    resource: "roles" },
   { href: "/users",     label: "Users",     icon: Users,          resource: "users" },
   { href: "/blood-banks", label: "Blood Banks", icon: Building2,  resource: "users" },
+  { href: "/requests",    label: "Requests",    icon: Droplet,      roleIncludes: "bank" },
+  { href: "/responses",   label: "My Responses", icon: HeartHandshake, roleIncludes: "dona" },
 ];

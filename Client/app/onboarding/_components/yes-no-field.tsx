@@ -7,7 +7,8 @@ type Tone = "default" | "destructive";
 interface YesNoFieldProps {
   title: string;
   description?: string;
-  value: boolean;
+  /** `null`/`undefined` = unanswered — neither option shows as selected. */
+  value: boolean | null;
   onChange: (value: boolean) => void;
   yesLabel?: string;
   noLabel?: string;
@@ -54,7 +55,7 @@ export function YesNoField({
           <Button
             type="button"
             size="sm"
-            variant={value ? yesTone : "outline"}
+            variant={value === true ? yesTone : "outline"}
             onClick={() => onChange(true)}
           >
             {yesLabel}
@@ -62,7 +63,7 @@ export function YesNoField({
           <Button
             type="button"
             size="sm"
-            variant={!value ? noTone : "outline"}
+            variant={value === false ? noTone : "outline"}
             onClick={() => onChange(false)}
           >
             {noLabel}
