@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -76,6 +76,20 @@ export default function SignupPage() {
   });
   const roles = signupRoles ?? [];
 
+  // Auto-select Blood Donar role by default if available and no role selected yet
+  useEffect(() => {
+    if (!roleId && roles.length > 0) {
+      const donorRole = roles.find(
+        (r) =>
+          r.name.toLowerCase().includes("dona") ||
+          r.name.toLowerCase().includes("donor")
+      );
+      if (donorRole) {
+        setRoleId(donorRole.id);
+      }
+    }
+  }, [roles, roleId]);
+
   const signupMutation = useMutation({
     mutationFn: () =>
       authService.signUp(name.trim(), email.trim(), password, {
@@ -87,9 +101,15 @@ export default function SignupPage() {
       setFormError(null);
 
       toast.success(`Welcome, ${user.name.split(" ")[0]}`, {
-        description: "Your account is ready.",
+        description: "Your account is ready. Let's complete your donor onboarding.",
       });
-      router.replace("/dashboard");
+
+      const roleLower = (user.role || "").toLowerCase();
+      if (roleLower.includes("dona") || roleLower.includes("donor")) {
+        router.replace("/onboarding/donor");
+      } else {
+        router.replace("/dashboard");
+      }
     },
     onError: (error) => {
       if (error instanceof ApiRequestError) {
@@ -140,6 +160,10 @@ export default function SignupPage() {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !password) {
       setFormError("Fill in all fields.");
+      return;
+    }
+    if (!roleId && roles.length > 0) {
+      setFormError("Please select a role. Role selection is mandatory.");
       return;
     }
     if (password.length < 10) {
@@ -269,7 +293,7 @@ export default function SignupPage() {
             {roles.length > 0 && (
               <div className="space-y-2">
                 <Label htmlFor="role" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Join as <span className="font-normal normal-case">(optional)</span>
+                  Select Your Role <span className="text-primary font-bold">*</span>
                 </Label>
                 <Select
                   value={roleId}
@@ -277,7 +301,7 @@ export default function SignupPage() {
                   disabled={rolesPending || isBusy}
                 >
                   <SelectTrigger id="role" className="h-11 w-full rounded-lg">
-                    <SelectValue placeholder="Choose a role" />
+                    <SelectValue placeholder="Choose a role (Mandatory)" />
                   </SelectTrigger>
                   <SelectContent>
                     {roles.map((r) => (

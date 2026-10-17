@@ -25,8 +25,10 @@ export function toDateInput(
   value: string | null | undefined,
 ): Date | null | undefined {
   if (value === undefined) return undefined;
-  if (value === null) return null;
-  return new Date(value);
+  if (value === null || value === '' || (typeof value === 'string' && value.trim() === '')) return null;
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return null;
+  return d;
 }
 
 /**

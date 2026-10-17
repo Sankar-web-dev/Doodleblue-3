@@ -40,8 +40,8 @@ export class PersonalProfileService {
 
     return this.prisma.personalProfile.upsert({
       where: { userId },
-      create: { userId, ...data, profileCompleted },
-      update: { ...data, profileCompleted },
+      create: { userId, ...data },
+      update: data,
     });
   }
 }
