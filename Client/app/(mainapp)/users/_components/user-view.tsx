@@ -1,10 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Plus,
   Loader2,
   AlertCircle,
   RefreshCw,
@@ -178,17 +176,9 @@ export function UsersView() {
         <div>
           <h1 className="font-display text-2xl font-bold tracking-tight">Users</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Provision user accounts, assign custom roles, and view access profiles.
+            Manage registered accounts — assign roles, review access, and deactivate users.
           </p>
         </div>
-        {can("users", "create") && (
-          <Button asChild className="shrink-0 self-start sm:self-auto bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:bg-primary/90">
-            <Link href="/users/create">
-              <Plus className="mr-2 h-4 w-4" />
-              New user
-            </Link>
-          </Button>
-        )}
       </div>
 
       {/* Loading */}
