@@ -23,6 +23,7 @@ import {
   AlertTriangle,
   FileEdit,
   HeartHandshake,
+  Building2,
 } from "lucide-react";
 
 import { useAuthUser } from "@/lib/use-auth-user";
@@ -30,6 +31,7 @@ import { useUsers } from "../users/_hooks/use-users";
 import { useRoles } from "../roles/_hooks/use-roles";
 import {
   profilesApi,
+  PROFILES_BLOOD_BANK_KEY,
   PROFILES_DONOR_KEY,
   PROFILES_PERSONAL_KEY,
 } from "@/api/profiles.api";
@@ -61,9 +63,9 @@ export default function DashboardPage() {
   const { user } = useAuthUser();
   const firstName = user?.name.split(" ")[0] ?? "there";
 
-  const isDonor =
-    (user?.role || "").toLowerCase().includes("dona") ||
-    (user?.role || "").toLowerCase().includes("donor");
+  const roleLower = (user?.role || "").toLowerCase();
+  const isDonor = roleLower.includes("dona") || roleLower.includes("donor");
+  const isBloodBank = roleLower.includes("bank");
 
   // Admin stats
   const { data: usersData, isPending: usersPending } = useUsers();
@@ -80,6 +82,14 @@ export default function DashboardPage() {
     queryKey: PROFILES_PERSONAL_KEY,
     queryFn: () => profilesApi.getPersonalProfile().then((res) => res.profile),
     enabled: isDonor,
+  });
+
+  // Blood bank query
+  const { data: bankData, isPending: bankPending } = useQuery({
+    queryKey: PROFILES_BLOOD_BANK_KEY,
+    queryFn: () =>
+      profilesApi.getBloodBankProfile().then((res) => res.profile),
+    enabled: isBloodBank,
   });
 
   // -------------------------------------------------------------------------
@@ -331,6 +341,296 @@ export default function DashboardPage() {
                   <p className="text-foreground font-semibold">Your Group: {bloodGroupLabel}</p>
                   <p className="text-muted-foreground">
                     Matches compatible emergency recipients in nearby authorized blood banks.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // BLOOD BANK DASHBOARD VIEW
+  // -------------------------------------------------------------------------
+  if (isBloodBank) {
+    const bankLoading = bankPending;
+    const profileComplete = !!bankData?.institutionName;
+    const verification = bankData?.verificationStatus ?? "PENDING";
+
+    const verificationMeta = {
+      VERIFIED: {
+        label: "Verified",
+        tint: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+        icon: CheckCircle2,
+      },
+      PENDING: {
+        label: "Pending Review",
+        tint: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+        icon: AlertTriangle,
+      },
+      REJECTED: {
+        label: "Rejected",
+        tint: "bg-destructive/10 text-destructive",
+        icon: AlertTriangle,
+      },
+      SUSPENDED: {
+        label: "Suspended",
+        tint: "bg-muted text-muted-foreground",
+        icon: AlertTriangle,
+      },
+    }[verification];
+
+    return (
+      <div className="flex flex-col gap-8">
+        {/* Greeting */}
+        <div className="animate-fade-up flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h1 className="font-display text-3xl font-bold tracking-tight">
+                {greeting()}, {firstName}
+              </h1>
+              <Badge variant="outline" className="border-primary/40 text-primary">
+                Blood Bank
+              </Badge>
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {new Date().toLocaleDateString(undefined, {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })}{" "}
+              — Welcome to your Institution Portal.
+            </p>
+          </div>
+
+          <Link href="/onboarding/blood-bank">
+            <Button variant="outline" className="gap-2 border-border/80">
+              <FileEdit className="h-4 w-4" />
+              {profileComplete ? "Update Institution Details" : "Complete Registration"}
+            </Button>
+          </Link>
+        </div>
+
+        {/* Incomplete Onboarding Banner */}
+        {!bankLoading && !profileComplete && (
+          <Card className="animate-fade-up border-primary/40 bg-primary/5 shadow-xs">
+            <CardContent className="flex flex-col items-start justify-between gap-4 p-6 sm:flex-row sm:items-center">
+              <div className="flex items-start gap-3.5">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-display text-base font-bold text-foreground">
+                    Institution Registration Incomplete
+                  </h3>
+                  <p className="mt-0.5 text-xs text-muted-foreground max-w-xl">
+                    Please complete the 4-step institution onboarding. Once
+                    submitted, an administrator will verify your registration.
+                  </p>
+                </div>
+              </div>
+              <Link href="/onboarding/blood-bank">
+                <Button className="shrink-0 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold gap-2">
+                  Launch Registration Stepper <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Stat Cards */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {/* Verification Status */}
+          <Card className="animate-fade-up border-border/80 shadow-xs">
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${verificationMeta.tint}`}>
+                <verificationMeta.icon className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-display text-xl font-bold leading-none tracking-tight">
+                  {bankLoading ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  ) : (
+                    verificationMeta.label
+                  )}
+                </p>
+                <p className="mt-1 text-xs font-medium text-muted-foreground">Verification Status</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Institution Type */}
+          <Card className="animate-fade-up border-border/80 shadow-xs">
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Building2 className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-display text-xl font-bold leading-none tracking-tight">
+                  {bankLoading ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  ) : (
+                    bankData?.hospitalType
+                      ? bankData.hospitalType.charAt(0) +
+                        bankData.hospitalType.slice(1).toLowerCase()
+                      : "—"
+                  )}
+                </p>
+                <p className="mt-1 text-xs font-medium text-muted-foreground">Institution Type</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Registration Number */}
+          <Card className="animate-fade-up border-border/80 shadow-xs">
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-tertiary/15 text-tertiary">
+                <FileEdit className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-display text-lg font-bold leading-none tracking-tight">
+                  {bankLoading ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  ) : (
+                    bankData?.registrationNumber || "Not provided"
+                  )}
+                </p>
+                <p className="mt-1 text-xs font-medium text-muted-foreground">License / Reg. No.</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Location */}
+          <Card className="animate-fade-up border-border/80 shadow-xs">
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                <MapPin className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-display text-lg font-bold leading-none tracking-tight">
+                  {bankLoading ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  ) : bankData?.city ? (
+                    `${bankData.city}, ${bankData.state ?? ""}`
+                  ) : (
+                    "—"
+                  )}
+                </p>
+                <p className="mt-1 text-xs font-medium text-muted-foreground">Facility Location</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {/* Institution Summary Card */}
+          <Card className="animate-fade-up border-border/80 lg:col-span-2 shadow-xs">
+            <CardHeader className="flex-row items-center justify-between pb-3">
+              <div>
+                <CardTitle className="text-lg">Institution Record</CardTitle>
+                <CardDescription>Registered profile of your blood bank</CardDescription>
+              </div>
+              <Link href="/onboarding/blood-bank">
+                <Button size="sm" variant="ghost" className="text-xs text-primary gap-1">
+                  Edit <ArrowRight className="h-3 w-3" />
+                </Button>
+              </Link>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-1">
+              <div className="grid grid-cols-2 gap-4 rounded-xl border border-border/70 bg-muted/20 p-4 sm:grid-cols-3">
+                <div>
+                  <span className="text-[11px] font-semibold uppercase text-muted-foreground">Institution</span>
+                  <p className="mt-0.5 text-sm font-bold text-foreground">
+                    {bankData?.institutionName || "—"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-[11px] font-semibold uppercase text-muted-foreground">Institution Phone</span>
+                  <p className="mt-0.5 text-sm font-bold text-foreground">
+                    {bankData?.hospitalPhone || "—"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-[11px] font-semibold uppercase text-muted-foreground">Contact Person</span>
+                  <p className="mt-0.5 text-sm font-bold text-foreground">
+                    {bankData?.contactPersonName || "—"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-[11px] font-semibold uppercase text-muted-foreground">Contact Phone</span>
+                  <p className="mt-0.5 text-sm font-bold text-foreground">
+                    {bankData?.contactPhone || "—"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-[11px] font-semibold uppercase text-muted-foreground">Official Email</span>
+                  <p className="mt-0.5 text-sm font-bold text-foreground">
+                    {bankData?.officialEmail || "—"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-[11px] font-semibold uppercase text-muted-foreground">Address</span>
+                  <p className="mt-0.5 text-sm font-bold text-foreground">
+                    {bankData?.addressLine
+                      ? `${bankData.addressLine}, ${bankData.city ?? ""}`
+                      : "—"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Verification guidance */}
+              <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 text-xs text-muted-foreground">
+                <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <div>
+                  <span className="font-semibold text-foreground">Verification note:</span>
+                  <p className="mt-0.5">
+                    {verification === "VERIFIED"
+                      ? "Your institution is verified. You can post and manage blood requests."
+                      : bankData?.verificationNotes
+                        ? bankData.verificationNotes
+                        : "Your registration is under administrator review. You will be notified once verification completes."}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card className="animate-fade-up border-border/80 shadow-xs">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Quick Actions</CardTitle>
+              <CardDescription>Institution portal navigation</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 pt-1">
+              <Link
+                href="/onboarding/blood-bank"
+                className="group flex items-center gap-3 rounded-xl border border-border/80 p-3.5 transition-all hover:border-primary/40 hover:bg-muted/40"
+              >
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Activity className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate">Registration Stepper</p>
+                  <p className="text-xs text-muted-foreground truncate">Update institution profile</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+              </Link>
+
+              <div className="rounded-xl border border-border/80 bg-muted/20 p-4 space-y-2">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Verification Workflow
+                </h4>
+                <div className="space-y-1 text-xs">
+                  <p className="text-foreground font-semibold">
+                    Status: {verificationMeta.label}
+                  </p>
+                  <p className="text-muted-foreground">
+                    Verified institutions can raise blood requests and manage
+                    donor coordination.
                   </p>
                 </div>
               </div>

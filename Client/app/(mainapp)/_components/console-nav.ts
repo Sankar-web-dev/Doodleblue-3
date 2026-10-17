@@ -1,4 +1,5 @@
 import {
+  Building2,
   LayoutDashboard,
   ShieldCheck,
   Users,
@@ -25,4 +26,5 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/roles",     label: "Roles",     icon: ShieldCheck,    resource: "roles" },
   { href: "/users",     label: "Users",     icon: Users,          resource: "users" },
+  { href: "/blood-banks", label: "Blood Banks", icon: Building2,  resource: "users" },
 ];
