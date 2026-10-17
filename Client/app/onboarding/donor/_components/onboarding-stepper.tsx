@@ -40,7 +40,7 @@ export function OnboardingStepper({
       </div>
 
       {/* Stepper Dots (Desktop) */}
-      <div className="mt-5 hidden grid-cols-6 gap-2 sm:grid">
+      <div className="mt-5 hidden grid-cols-6 gap-1.5 sm:grid">
         {steps.map((s) => {
           const isDone = currentStep > s.num;
           const isCurrent = currentStep === s.num;
@@ -51,7 +51,7 @@ export function OnboardingStepper({
               onClick={() => s.num < currentStep && onStepClick(s.num)}
               disabled={s.num > currentStep}
               className={cn(
-                "flex items-center gap-2 rounded-lg p-2 text-left transition-colors",
+                "flex items-center gap-1.5 rounded-lg px-1.5 py-2 text-left transition-colors",
                 isCurrent
                   ? "bg-primary/10 text-primary ring-1 ring-primary/40"
                   : isDone
@@ -71,8 +71,10 @@ export function OnboardingStepper({
               >
                 {isDone ? <CheckCircle2 className="h-4 w-4" /> : s.num}
               </div>
-              <div className="min-w-0 flex-1 truncate">
-                <p className="truncate text-xs font-medium">{s.title}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-medium leading-tight">
+                  {s.title}
+                </p>
               </div>
             </button>
           );
