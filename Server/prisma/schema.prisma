@@ -179,7 +179,6 @@ model User {
   verifiedBanks      BloodBankProfile[]  @relation("BankVerifier")
   reviewedScreenings DonationScreening[] @relation("ScreeningReviewer")
   verifiedDonations  Donation[]          @relation("DonationVerifier")
-  auditLogs          AuditLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -600,28 +599,4 @@ model Notification {
 
   @@index([userId, isRead, createdAt])
 }
-
-// ======================================================
-// AUDIT LOG
-// ======================================================
-
-model AuditLog {
-  id          String   @id @default(uuid())
-  actorUserId String?
-  action      String
-  resource    String
-  resourceId  String?
-  details     Json?
-  ipAddress   String?
-
-  actor User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
-
-  createdAt DateTime @default(now())
-
-  @@index([actorUserId])
-  @@index([action])
-  @@index([resource])
-  @@index([createdAt])
-}
-
 
