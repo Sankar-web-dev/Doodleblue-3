@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CheckCircle2, Loader2, PauseCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -76,10 +76,12 @@ export function VerifyBloodBankDialog({
   const [notes, setNotes] = useState("");
   const verifyMutation = useVerifyBloodBank(onClose);
 
-  // Reset notes whenever a new target opens
-  useEffect(() => {
+  // Reset notes whenever a new target opens (render-time adjust).
+  const [prevTarget, setPrevTarget] = useState(target);
+  if (target !== prevTarget) {
+    setPrevTarget(target);
     if (target) setNotes("");
-  }, [target]);
+  }
 
   const meta = target
     ? ACTION_META[target.status as Exclude<VerificationStatus, "PENDING">]

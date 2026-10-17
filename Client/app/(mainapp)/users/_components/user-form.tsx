@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -56,8 +56,10 @@ export function UserForm({ user }: UserFormProps) {
   const [isActive, setIsActive] = useState(user?.isActive ?? true);
   const [error, setError] = useState<string | null>(null);
 
-  // Sync state if user prop changes or loads asynchronously
-  useEffect(() => {
+  // Sync state if user prop changes or loads asynchronously (render-time adjust).
+  const [prevUser, setPrevUser] = useState(user);
+  if (user !== prevUser) {
+    setPrevUser(user);
     if (user) {
       setName(user.name ?? "");
       setEmail(user.email ?? "");
@@ -67,11 +69,15 @@ export function UserForm({ user }: UserFormProps) {
         setRoleId(user.roleId);
       }
     }
-  }, [user]);
+  }
 
-  // When roles load, if user has roleId or role name, ensure roleId is matched accurately
-  useEffect(() => {
-    if (roles.length > 0 && user) {
+  // When roles load, if user has roleId or role name, ensure roleId is matched
+  // accurately. `roles` is a fresh [] until the query resolves, so the length
+  // check must precede the identity compare to avoid a render loop.
+  const [syncedRoles, setSyncedRoles] = useState<typeof roles | null>(null);
+  if (roles.length > 0 && (roles !== syncedRoles || user !== prevUser)) {
+    setSyncedRoles(roles);
+    if (user) {
       if (user.roleId && roles.some((r) => r.id === user.roleId)) {
         setRoleId(user.roleId);
       } else if (user.role) {
@@ -83,7 +89,7 @@ export function UserForm({ user }: UserFormProps) {
         }
       }
     }
-  }, [roles, user]);
+  }
 
   function generatePassword() {
     const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*";

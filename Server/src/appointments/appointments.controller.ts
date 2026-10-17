@@ -37,7 +37,11 @@ export class AppointmentsController {
   ) {
     return {
       data: {
-        appointment: await this.appointments.create(dto, req.user),
+        appointment: await this.appointments.create(
+          dto,
+          req.user,
+          req.currentRole,
+        ),
       },
     };
   }
@@ -51,6 +55,16 @@ export class AppointmentsController {
       query,
       req.user,
     );
+    return { data, meta };
+  }
+
+  /** Blood bank view — appointments across all of the caller's requests. */
+  @Get('manage')
+  async listOwned(
+    @Query() query: ListAppointmentsQueryDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const { data, meta } = await this.appointments.listOwned(query, req.user);
     return { data, meta };
   }
 

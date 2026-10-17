@@ -43,13 +43,24 @@ const APPOINTMENT_INCLUDE = {
 export class AppointmentsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** Schedule a donation appointment — donor books for themselves. */
-  async create(dto: CreateAppointmentDto, user: UserModel) {
-    const donor = await requireDonorProfile(this.prisma, user.id);
-
+  /**
+   * Schedule a donation appointment — a donor books for themselves, or the
+   * request owner/admin schedules on a donor's behalf via `donorProfileId`.
+   */
+  async create(
+    dto: CreateAppointmentDto,
+    user: UserModel,
+    role: RoleModel | null,
+  ) {
     const request = await this.prisma.bloodRequest.findUnique({
       where: { id: dto.requestId },
-      select: { id: true, status: true },
+      select: {
+        id: true,
+        status: true,
+        createdByUserId: true,
+        hospitalName: true,
+        city: true,
+      },
     });
     if (!request) {
       throw new ApiException(
@@ -66,6 +77,40 @@ export class AppointmentsService {
       );
     }
 
+    const onBehalfOfDonor = !!dto.donorProfileId;
+    let donorProfileId: string;
+    let donorUserId: string;
+    if (onBehalfOfDonor) {
+      // Only the request owner or an admin may schedule for a donor.
+      if (
+        request.createdByUserId !== user.id &&
+        !hasPermission(user, role, 'users', 'update')
+      ) {
+        throw new ApiException(
+          403,
+          'FORBIDDEN',
+          'Only the request owner can schedule for a donor',
+        );
+      }
+      const donor = await this.prisma.donorProfile.findUnique({
+        where: { id: dto.donorProfileId },
+        select: { id: true, userId: true },
+      });
+      if (!donor) {
+        throw new ApiException(
+          404,
+          'DONOR_NOT_FOUND',
+          'Donor profile not found',
+        );
+      }
+      donorProfileId = donor.id;
+      donorUserId = donor.userId;
+    } else {
+      const donor = await requireDonorProfile(this.prisma, user.id);
+      donorProfileId = donor.id;
+      donorUserId = user.id;
+    }
+
     const scheduledAt = new Date(dto.scheduledAt);
     if (scheduledAt.getTime() <= Date.now()) {
       throw new ApiException(
@@ -75,16 +120,51 @@ export class AppointmentsService {
       );
     }
 
-    return this.prisma.appointment.create({
-      data: {
-        requestId: dto.requestId,
-        donorProfileId: donor.id,
-        donationId: dto.donationId,
-        scheduledAt,
-        location: dto.location,
-        notes: dto.notes,
-      },
-      include: APPOINTMENT_INCLUDE,
+    const when = scheduledAt.toLocaleString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+    const where = dto.location ?? request.hospitalName ?? request.city;
+
+    return this.prisma.$transaction(async (tx) => {
+      const appointment = await tx.appointment.create({
+        data: {
+          requestId: dto.requestId,
+          donorProfileId,
+          donationId: dto.donationId,
+          scheduledAt,
+          location: dto.location,
+          notes: dto.notes,
+        },
+        include: APPOINTMENT_INCLUDE,
+      });
+
+      // Owner-scheduled: advance the donor's response to APPOINTMENT_SCHEDULED.
+      if (onBehalfOfDonor) {
+        await tx.donorResponse.updateMany({
+          where: {
+            requestId: dto.requestId,
+            donorProfileId,
+            status: { in: ['INTERESTED', 'CONTACTED'] },
+          },
+          data: { status: 'APPOINTMENT_SCHEDULED', contactedAt: new Date() },
+        });
+      }
+
+      await tx.notification.create({
+        data: {
+          userId: donorUserId,
+          type: 'APPOINTMENT',
+          title: 'Donation appointment scheduled',
+          message: `Your donation slot is ${when}${where ? ` at ${where}` : ''}.`,
+          link: '/appointments',
+        },
+      });
+
+      return appointment;
     });
   }
 
@@ -99,6 +179,29 @@ export class AppointmentsService {
     const { skip, take, page, limit } = pageParams(query);
     const where = {
       donorProfileId: donor.id,
+      ...(query.status ? { status: query.status } : {}),
+      ...(query.requestId ? { requestId: query.requestId } : {}),
+    };
+
+    const [data, total] = await Promise.all([
+      this.prisma.appointment.findMany({
+        where,
+        orderBy: { scheduledAt: 'asc' },
+        skip,
+        take,
+        include: APPOINTMENT_INCLUDE,
+      }),
+      this.prisma.appointment.count({ where }),
+    ]);
+
+    return { data, meta: listMeta(total, page, limit) };
+  }
+
+  /** Appointments across all of the caller's own requests (blood bank). */
+  async listOwned(query: ListAppointmentsQueryDto, user: UserModel) {
+    const { skip, take, page, limit } = pageParams(query);
+    const where = {
+      request: { createdByUserId: user.id },
       ...(query.status ? { status: query.status } : {}),
       ...(query.requestId ? { requestId: query.requestId } : {}),
     };
@@ -203,7 +306,10 @@ export class AppointmentsService {
   private async load(id: string) {
     const appointment = await this.prisma.appointment.findUnique({
       where: { id },
-      include: { donor: { select: { userId: true } } },
+      include: {
+        donor: { select: { userId: true } },
+        request: { select: { createdByUserId: true } },
+      },
     });
     if (!appointment) {
       throw new ApiException(
@@ -216,12 +322,16 @@ export class AppointmentsService {
   }
 
   private assertCanManage(
-    appointment: AppointmentModel & { donor: { userId: string } },
+    appointment: AppointmentModel & {
+      donor: { userId: string };
+      request: { createdByUserId: string };
+    },
     user: UserModel,
     role: RoleModel | null,
   ) {
     if (
       appointment.donor.userId === user.id ||
+      appointment.request.createdByUserId === user.id ||
       hasPermission(user, role, 'users', 'update')
     ) {
       return;
