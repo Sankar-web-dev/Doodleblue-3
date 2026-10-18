@@ -43,6 +43,8 @@ export interface BloodRequest {
   district?: string | null;
   state: string;
   pincode?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   contactName?: string | null;
   contactPhone?: string | null;
   notes?: string | null;
@@ -75,6 +77,8 @@ export interface BloodRequestInput {
   district?: string;
   state: string;
   pincode?: string;
+  latitude?: number;
+  longitude?: number;
   contactName?: string;
   contactPhone?: string;
   notes?: string;

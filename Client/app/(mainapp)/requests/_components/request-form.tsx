@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuthUser } from "@/lib/use-auth-user";
+import { AddressMapPicker } from "@/components/location/address-map-picker";
 
 import {
   BLOOD_GROUP_OPTIONS,
@@ -90,6 +91,9 @@ export function RequestForm({
   } = form;
 
   const watchedRequestType = useWatch({ control, name: "requestType" });
+  const watchHospitalAddress = useWatch({ control, name: "hospitalAddress" });
+  const watchLatitude = useWatch({ control, name: "latitude" });
+  const watchLongitude = useWatch({ control, name: "longitude" });
   const currentRequestType = watchedRequestType || (isRecipient ? "RECIPIENT" : "BLOOD_BANK");
 
   // Blood bank profile (for bank accounts)
@@ -558,14 +562,51 @@ export function RequestForm({
           <div className="space-y-2 sm:col-span-2 lg:col-span-3">
             <Label
               htmlFor="hospitalAddress"
-              className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+              className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center justify-between"
             >
-              Address
+              <span>Address &amp; Location on Map</span>
             </Label>
-            <Input
+            <AddressMapPicker
               id="hospitalAddress"
-              placeholder="Street address of the hospital or collection facility"
-              {...register("hospitalAddress")}
+              placeholder="Search hospital or delivery address on map…"
+              value={watchHospitalAddress ?? ""}
+              latitude={watchLatitude}
+              longitude={watchLongitude}
+              onChangeAddress={(val) =>
+                setValue("hospitalAddress", val, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
+              onLocationSelect={(data) => {
+                if (data.addressLine)
+                  setValue("hospitalAddress", data.addressLine, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  });
+                if (data.city)
+                  setValue("city", data.city, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  });
+                if (data.district)
+                  setValue("district", data.district, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  });
+                if (data.state)
+                  setValue("state", data.state, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  });
+                if (data.pincode)
+                  setValue("pincode", data.pincode, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  });
+                setValue("latitude", data.latitude, { shouldDirty: true });
+                setValue("longitude", data.longitude, { shouldDirty: true });
+              }}
             />
             <FieldError message={err("hospitalAddress")} />
           </div>

@@ -252,6 +252,8 @@ model PersonalProfile {
   district    String?
   state       String?
   pincode     String?
+  latitude    Float?
+  longitude   Float?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -366,6 +368,8 @@ model BloodBankProfile {
   district    String
   state       String
   pincode     String
+  latitude    Float?
+  longitude   Float?
 
   registrationNumber String?
   verificationStatus VerificationStatus @default(PENDING)
@@ -422,6 +426,8 @@ model BloodRequest {
   district        String?
   state           String
   pincode         String?
+  latitude        Float?
+  longitude       Float?
 
   contactName  String?
   contactPhone String?

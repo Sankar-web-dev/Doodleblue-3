@@ -1,6 +1,16 @@
+packages:
+  - 'Client'
+  - 'Server'
+
 allowBuilds:
   core-js: false
   sharp: false
+  '@prisma/engines': false
+  esbuild: false
+  prisma: false
+  workerd: false
+  unrs-resolver: false
+
 minimumReleaseAgeExclude:
   - lucide-react@1.56.0
   - '@next/env@16.4.1'

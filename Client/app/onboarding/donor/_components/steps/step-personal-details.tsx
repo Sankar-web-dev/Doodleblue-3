@@ -1,8 +1,9 @@
 "use client";
 
-import { Controller, useFormContext } from "react-hook-form";
+import { Controller, useFormContext, useWatch } from "react-hook-form";
 import { Calendar, MapPin, Phone, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { AddressMapPicker } from "@/components/location/address-map-picker";
 import {
   Select,
   SelectContent,
@@ -21,9 +22,14 @@ export function StepPersonalDetails() {
   const {
     register,
     control,
+    setValue,
     watch,
     formState: { errors },
   } = useFormContext<DonorOnboardingFormValues>();
+
+  const watchAddressLine = useWatch({ control, name: "addressLine" });
+  const watchLatitude = useWatch({ control, name: "latitude" });
+  const watchLongitude = useWatch({ control, name: "longitude" });
   const dateOfBirth = watch("dateOfBirth");
 
   return (
@@ -124,18 +130,56 @@ export function StepPersonalDetails() {
           Location
         </h4>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField
-            label="Street Address / Landmark"
-            htmlFor="addressLine"
-            variant="subtle"
-            className="sm:col-span-2"
-          >
-            <Input
+          <div className="sm:col-span-2 space-y-1.5">
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Search Address or Landmark on Map
+            </label>
+            <AddressMapPicker
               id="addressLine"
-              placeholder="e.g. Flat 402, Green Meadows, 5th Main Rd"
-              {...register("addressLine")}
+              placeholder="Search apartment, street, landmark, or city…"
+              value={watchAddressLine ?? ""}
+              latitude={watchLatitude}
+              longitude={watchLongitude}
+              onChangeAddress={(val) =>
+                setValue("addressLine", val, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
+              onLocationSelect={(data) => {
+                if (data.addressLine)
+                  setValue("addressLine", data.addressLine, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  });
+                if (data.city)
+                  setValue("city", data.city, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  });
+                if (data.district)
+                  setValue("district", data.district, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  });
+                if (data.state)
+                  setValue("state", data.state, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  });
+                if (data.pincode)
+                  setValue("pincode", data.pincode, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  });
+                setValue("latitude", data.latitude, { shouldDirty: true });
+                setValue("longitude", data.longitude, { shouldDirty: true });
+              }}
             />
-          </FormField>
+            {errors.addressLine?.message && (
+              <p className="text-xs text-destructive">{errors.addressLine.message}</p>
+            )}
+          </div>
 
           <FormField
             label="City *"

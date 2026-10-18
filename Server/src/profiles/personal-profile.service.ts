@@ -24,6 +24,8 @@ export class PersonalProfileService {
       district: dto.district,
       state: dto.state,
       pincode: dto.pincode,
+      latitude: dto.latitude,
+      longitude: dto.longitude,
     };
 
     // Merged view used to recompute completeness after the write.

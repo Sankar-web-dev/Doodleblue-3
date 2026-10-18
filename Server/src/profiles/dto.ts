@@ -77,6 +77,16 @@ export class UpsertPersonalProfileDto {
   @IsString()
   @MaxLength(10)
   pincode?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  latitude?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  longitude?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -292,6 +302,16 @@ export class UpsertBloodBankProfileDto {
   @IsString()
   @MaxLength(10)
   pincode?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  latitude?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  longitude?: number;
 
   @Transform(trim)
   @IsOptional()

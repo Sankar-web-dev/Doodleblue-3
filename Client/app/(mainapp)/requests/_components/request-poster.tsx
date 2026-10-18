@@ -27,6 +27,7 @@ import {
   type RequestPosterData,
 } from "../_lib/request-form";
 import { cn } from "@/lib/utils";
+import { LocationMapView } from "@/components/location/location-map-view";
 
 const URGENCY_PILL_TEXT: Record<BloodUrgency, string> = {
   EMERGENCY: "text-red-600",
@@ -442,6 +443,17 @@ export function RequestPoster({
             <InfoRow icon={MapPin} label="District" value={data.district} />
             <InfoRow icon={MapPin} label="State" value={data.state} />
           </div>
+          {(data.latitude || data.longitude || data.hospitalAddress) && (
+            <div className="mt-2 pt-2 border-t border-border/50">
+              <LocationMapView
+                latitude={data.latitude}
+                longitude={data.longitude}
+                title={data.hospitalName ?? "Hospital Location"}
+                address={data.hospitalAddress || [data.city, data.state].filter(Boolean).join(", ")}
+                height="h-28"
+              />
+            </div>
+          )}
         </SectionCard>
       </div>
 

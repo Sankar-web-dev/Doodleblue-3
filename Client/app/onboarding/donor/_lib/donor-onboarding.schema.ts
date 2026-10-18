@@ -18,6 +18,8 @@ export const donorOnboardingSchema = z.object({
   district: z.string(),
   state: z.string().min(1, "State is required"),
   pincode: z.string().min(6, "Enter 6 digit pincode"),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 
   // Step 2: Physical & Blood Profile
   bloodGroup: z.enum([
@@ -86,6 +88,8 @@ export const DONOR_ONBOARDING_DEFAULTS: DonorOnboardingFormValues = {
   district: "",
   state: "",
   pincode: "",
+  latitude: undefined,
+  longitude: undefined,
 
   bloodGroup: "O_POSITIVE",
   heightCm: 0,

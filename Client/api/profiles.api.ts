@@ -50,6 +50,8 @@ export interface PersonalProfile {
   district?: string | null;
   state?: string | null;
   pincode?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -102,6 +104,8 @@ export interface BloodBankProfile {
   district?: string | null;
   state?: string | null;
   pincode?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   registrationNumber?: string | null;
   verificationStatus?: VerificationStatus;
   verificationNotes?: string | null;

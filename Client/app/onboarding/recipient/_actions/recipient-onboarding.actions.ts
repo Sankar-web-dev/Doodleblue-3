@@ -25,6 +25,8 @@ export async function saveRecipientOnboarding(
     district: formValues.district.trim() || undefined,
     state: formValues.state.trim() || undefined,
     pincode: formValues.pincode.trim() || undefined,
+    latitude: formValues.latitude,
+    longitude: formValues.longitude,
   });
 
   await profilesApi.upsertRecipientProfile({

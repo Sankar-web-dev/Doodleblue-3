@@ -19,6 +19,8 @@ export const recipientOnboardingSchema = z
     district: z.string(),
     state: z.string().min(1, "State is required"),
     pincode: z.string().min(6, "Enter 6 digit pincode"),
+    latitude: z.number().optional(),
+    longitude: z.number().optional(),
 
     // Step 2: Registration Context (RecipientProfile)
     registrationFor: z.enum(["SELF", "SOMEONE_ELSE"]),
@@ -51,6 +53,8 @@ export const RECIPIENT_ONBOARDING_DEFAULTS: RecipientOnboardingFormValues = {
   district: "",
   state: "",
   pincode: "",
+  latitude: undefined,
+  longitude: undefined,
 
   registrationFor: "SELF",
   relationshipToPatient: "",

@@ -5,6 +5,7 @@ import {
   IsEnum,
   IsInt,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   Max,
@@ -103,6 +104,16 @@ export class CreateBloodRequestDto {
   @IsString()
   @MaxLength(10)
   pincode?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  latitude?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  longitude?: number;
 
   @Transform(trim)
   @IsOptional()
@@ -205,6 +216,16 @@ export class UpdateBloodRequestDto {
   @IsString()
   @MaxLength(10)
   pincode?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  latitude?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  longitude?: number;
 
   @Transform(trim)
   @IsOptional()

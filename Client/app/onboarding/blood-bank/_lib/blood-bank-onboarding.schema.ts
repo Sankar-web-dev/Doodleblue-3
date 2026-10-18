@@ -61,6 +61,8 @@ export const bloodBankOnboardingSchema = z.object({
     .string()
     .min(6, "Enter 6 digit pincode")
     .max(10),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 });
 
 export type BloodBankOnboardingFormValues = z.infer<
@@ -84,4 +86,6 @@ export const BLOOD_BANK_ONBOARDING_DEFAULTS: BloodBankOnboardingFormValues = {
   district: "",
   state: "",
   pincode: "",
+  latitude: undefined,
+  longitude: undefined,
 };

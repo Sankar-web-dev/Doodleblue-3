@@ -117,6 +117,8 @@ export const bloodRequestFormSchema = z.object({
   district: z.string().max(120).optional(),
   state: z.string().min(1, "State is required").max(120),
   pincode: z.string().max(10).optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 
   contactName: z.string().max(120).optional(),
   contactPhone: z.string().max(20).optional(),
@@ -144,6 +146,8 @@ export const BLOOD_REQUEST_FORM_DEFAULTS: BloodRequestFormValues = {
   district: "",
   state: "",
   pincode: "",
+  latitude: undefined,
+  longitude: undefined,
 
   contactName: "",
   contactPhone: "",
@@ -184,6 +188,8 @@ export function toRequestInput(
     district: emptyToUndefined(values.district),
     state: values.state.trim(),
     pincode: emptyToUndefined(values.pincode),
+    latitude: values.latitude,
+    longitude: values.longitude,
     contactName: emptyToUndefined(values.contactName),
     contactPhone: emptyToUndefined(values.contactPhone),
     notes: emptyToUndefined(values.notes),
@@ -209,6 +215,8 @@ export function fromRequest(request: BloodRequest): BloodRequestFormValues {
     district: request.district ?? "",
     state: request.state ?? "",
     pincode: request.pincode ?? "",
+    latitude: request.latitude ?? undefined,
+    longitude: request.longitude ?? undefined,
     contactName: request.contactName ?? "",
     contactPhone: request.contactPhone ?? "",
     notes: request.notes ?? "",
@@ -240,6 +248,8 @@ export interface RequestPosterData {
   district?: string | null;
   state?: string | null;
   pincode?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   contactName?: string | null;
   contactPhone?: string | null;
   notes?: string | null;
@@ -269,6 +279,8 @@ export function posterDataFromValues(
     district: emptyToUndefined(values.district),
     state: emptyToUndefined(values.state),
     pincode: emptyToUndefined(values.pincode),
+    latitude: values.latitude,
+    longitude: values.longitude,
     contactName: emptyToUndefined(values.contactName),
     contactPhone: emptyToUndefined(values.contactPhone),
     notes: emptyToUndefined(values.notes),
@@ -299,6 +311,8 @@ export function posterDataFromRequest(
     district: request.district,
     state: request.state,
     pincode: request.pincode,
+    latitude: request.latitude,
+    longitude: request.longitude,
     contactName: request.contactName,
     contactPhone: request.contactPhone,
     notes: request.notes,

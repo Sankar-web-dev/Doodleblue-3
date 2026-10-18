@@ -21,6 +21,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
+import { LocationMapView } from "@/components/location/location-map-view";
 import type { VerifyTarget } from "./verify-blood-bank-dialog";
 
 const STATUS_STYLES: Record<VerificationStatus, string> = {
@@ -170,6 +171,17 @@ export function BloodBankDetailsSheet({
                 <DetailRow label="State" value={bank.state} />
                 <DetailRow label="Pincode" value={bank.pincode} />
               </dl>
+              {(bank.latitude || bank.longitude || bank.addressLine) && (
+                <div className="pt-2">
+                  <LocationMapView
+                    latitude={bank.latitude}
+                    longitude={bank.longitude}
+                    title={bank.institutionName ?? "Blood Bank Location"}
+                    address={bank.addressLine}
+                    height="h-32"
+                  />
+                </div>
+              )}
             </div>
 
             {canVerify && (

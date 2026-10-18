@@ -18,6 +18,8 @@ export function mapPersonalProfileToForm(
     district: profile.district ?? undefined,
     state: profile.state ?? undefined,
     pincode: profile.pincode ?? undefined,
+    latitude: profile.latitude ?? undefined,
+    longitude: profile.longitude ?? undefined,
   };
 }
 

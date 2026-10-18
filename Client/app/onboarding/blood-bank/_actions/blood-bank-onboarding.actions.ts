@@ -23,5 +23,7 @@ export async function saveBloodBankOnboarding(
     district: formValues.district.trim(),
     state: formValues.state.trim(),
     pincode: formValues.pincode.trim(),
+    latitude: formValues.latitude,
+    longitude: formValues.longitude,
   });
 }
