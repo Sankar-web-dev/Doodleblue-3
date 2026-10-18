@@ -104,6 +104,15 @@ export class DonationsService {
       );
     }
 
+    // Reuse existing donation for this request and donor instead of creating duplicates
+    const existing = await this.prisma.donation.findFirst({
+      where: { requestId: dto.requestId, donorProfileId },
+      include: DONATION_INCLUDE,
+    });
+    if (existing) {
+      return existing;
+    }
+
     return this.prisma.donation.create({
       data: {
         requestId: dto.requestId,
@@ -124,6 +133,26 @@ export class DonationsService {
       select: { id: true },
     });
     if (!donor) return { data: [], meta: listMeta(0, 1, 20) };
+
+    // Clean up any duplicate draft donations where a completed donation already exists for the same request
+    const completedForRequests = await this.prisma.donation.findMany({
+      where: {
+        donorProfileId: donor.id,
+        status: 'COMPLETED',
+      },
+      select: { requestId: true },
+    });
+    const completedRequestIds = completedForRequests.map((d) => d.requestId);
+
+    if (completedRequestIds.length > 0) {
+      await this.prisma.donation.deleteMany({
+        where: {
+          donorProfileId: donor.id,
+          requestId: { in: completedRequestIds },
+          status: { in: ['REGISTERED', 'SCREENING'] },
+        },
+      });
+    }
 
     return this.listWhere({ donorProfileId: donor.id }, query);
   }

@@ -49,12 +49,44 @@ export function DonationsView() {
     queryKey: MY_DONATIONS_KEY,
     queryFn: () => donationsApi.listMine(100),
   });
-  const donations = useMemo(() => data?.data ?? [], [data]);
+
+  // Deduplicate donations so multiple draft/screening attempts or duplicate rows for the same request merge into 1 card
+  const uniqueDonations = useMemo(() => {
+    const raw = data?.data ?? [];
+    const statusPriority: Record<string, number> = {
+      COMPLETED: 4,
+      APPROVED: 3,
+      SCREENING: 2,
+      REGISTERED: 1,
+      DEFERRED: 0,
+      CANCELLED: -1,
+    };
+
+    const map = new Map<string, Donation>();
+    for (const d of raw) {
+      const key = d.requestId ? `req_${d.requestId}` : `don_${d.id}`;
+      const existing = map.get(key);
+      if (!existing) {
+        map.set(key, d);
+      } else {
+        const existingPriority = statusPriority[existing.status] ?? 0;
+        const currentPriority = statusPriority[d.status] ?? 0;
+        if (currentPriority > existingPriority) {
+          map.set(key, d);
+        } else if (currentPriority === existingPriority) {
+          if (new Date(d.createdAt).getTime() > new Date(existing.createdAt).getTime()) {
+            map.set(key, d);
+          }
+        }
+      }
+    }
+    return Array.from(map.values());
+  }, [data]);
 
   // Aggregate impact metrics
   const completedDonations = useMemo(
-    () => donations.filter((d) => d.status === "COMPLETED"),
-    [donations]
+    () => uniqueDonations.filter((d) => d.status === "COMPLETED"),
+    [uniqueDonations]
   );
 
   const totalUnits = useMemo(
@@ -70,8 +102,12 @@ export function DonationsView() {
 
   // Filtered donations
   const filteredDonations = useMemo(() => {
-    return donations.filter((d) => {
-      if (statusFilter !== "ALL" && d.status !== statusFilter) return false;
+    return uniqueDonations.filter((d) => {
+      if (statusFilter === "REGISTERED") {
+        if (d.status !== "REGISTERED" && d.status !== "SCREENING") return false;
+      } else if (statusFilter !== "ALL" && d.status !== statusFilter) {
+        return false;
+      }
       if (!search.trim()) return true;
       const term = search.toLowerCase();
       const patient = d.request?.patientName?.toLowerCase() ?? "";
@@ -85,7 +121,7 @@ export function DonationsView() {
         bloodGroup.includes(term)
       );
     });
-  }, [donations, search, statusFilter]);
+  }, [uniqueDonations, search, statusFilter]);
 
   return (
     <div className="space-y-6">
@@ -196,15 +232,19 @@ export function DonationsView() {
           />
         </div>
         <div className="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-          {(["ALL", "COMPLETED", "REGISTERED"] as const).map((status) => (
+          {[
+            { id: "ALL", label: "All Donations" },
+            { id: "COMPLETED", label: "Completed" },
+            { id: "REGISTERED", label: "In Progress" },
+          ].map((tab) => (
             <Button
-              key={status}
+              key={tab.id}
               size="sm"
-              variant={statusFilter === status ? "default" : "outline"}
+              variant={statusFilter === tab.id ? "default" : "outline"}
               className="h-8 text-xs font-medium"
-              onClick={() => setStatusFilter(status)}
+              onClick={() => setStatusFilter(tab.id)}
             >
-              {status === "ALL" ? "All Donations" : status.charAt(0) + status.slice(1).toLowerCase()}
+              {tab.label}
             </Button>
           ))}
         </div>

@@ -317,17 +317,19 @@ export class ResponsesService {
       });
 
       if (completing) {
-        // 1. Create or update Donation record
-        const existingDonation = await tx.donation.findFirst({
+        // 1. Create or update Donation record without duplicates
+        const existingDonations = await tx.donation.findMany({
           where: {
             requestId: response.requestId,
             donorProfileId: response.donorProfileId,
           },
+          orderBy: { createdAt: 'desc' },
         });
 
-        if (existingDonation) {
+        if (existingDonations.length > 0) {
+          const primary = existingDonations[0];
           await tx.donation.update({
-            where: { id: existingDonation.id },
+            where: { id: primary.id },
             data: {
               status: 'COMPLETED',
               unitsDonated: unitsToFulfill,
@@ -336,6 +338,13 @@ export class ResponsesService {
                 response.request.hospitalName || response.request.city,
             },
           });
+          // Clean up any extra duplicate draft records
+          if (existingDonations.length > 1) {
+            const extraIds = existingDonations.slice(1).map((d) => d.id);
+            await tx.donation.deleteMany({
+              where: { id: { in: extraIds } },
+            });
+          }
         } else {
           await tx.donation.create({
             data: {
