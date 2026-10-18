@@ -50,11 +50,20 @@ export interface Donation {
   request?: {
     id: string;
     bloodGroup?: string;
+    component?: string;
+    urgency?: string;
+    status?: string;
     city?: string;
     state?: string;
     hospitalName?: string | null;
+    patientName?: string | null;
+    requestType?: "BLOOD_BANK" | "RECIPIENT";
+    contactName?: string | null;
+    contactPhone?: string | null;
+    creator?: { id: string; name: string } | null;
   } | null;
   screening?: { id: string; clinicalStatus: ClinicalScreeningStatus } | null;
+  verifiedBy?: { id: string; name: string } | null;
 }
 
 export interface UpsertScreeningInput {

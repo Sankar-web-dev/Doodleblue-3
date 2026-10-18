@@ -246,7 +246,11 @@ export class ResponsesService {
             bloodGroup: true,
             patientName: true,
             hospitalName: true,
+            city: true,
             requestType: true,
+            unitsRequired: true,
+            unitsFulfilled: true,
+            creator: { select: { name: true } },
           },
         },
         donor: { select: { userId: true } },
@@ -287,15 +291,105 @@ export class ResponsesService {
       }
     }
 
-    const updated = await this.prisma.donorResponse.update({
-      where: { id },
-      data: {
-        status: dto.status,
-        unitsOffered: dto.unitsOffered,
-        message: dto.message,
-        contactedAt: toDateInput(dto.contactedAt),
-      },
-      include: RESPONSE_INCLUDE,
+    const completing =
+      isRequestOwner &&
+      dto.status === 'COMPLETED' &&
+      response.status !== 'COMPLETED';
+    const unitsToFulfill = dto.unitsOffered ?? response.unitsOffered ?? 1;
+
+    let updatedRequestData: {
+      id: string;
+      unitsRequired: number;
+      unitsFulfilled: number;
+      remaining: number;
+    } | null = null;
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const resp = await tx.donorResponse.update({
+        where: { id },
+        data: {
+          status: dto.status,
+          unitsOffered: dto.unitsOffered,
+          message: dto.message,
+          contactedAt: toDateInput(dto.contactedAt) ?? (completing ? new Date() : undefined),
+        },
+        include: RESPONSE_INCLUDE,
+      });
+
+      if (completing) {
+        // 1. Create or update Donation record
+        const existingDonation = await tx.donation.findFirst({
+          where: {
+            requestId: response.requestId,
+            donorProfileId: response.donorProfileId,
+          },
+        });
+
+        if (existingDonation) {
+          await tx.donation.update({
+            where: { id: existingDonation.id },
+            data: {
+              status: 'COMPLETED',
+              unitsDonated: unitsToFulfill,
+              donationDate: new Date(),
+              collectionLocation:
+                response.request.hospitalName || response.request.city,
+            },
+          });
+        } else {
+          await tx.donation.create({
+            data: {
+              requestId: response.requestId,
+              donorProfileId: response.donorProfileId,
+              status: 'COMPLETED',
+              unitsDonated: unitsToFulfill,
+              donationDate: new Date(),
+              collectionLocation:
+                response.request.hospitalName || response.request.city,
+              notes: response.message ? `Response: ${response.message}` : null,
+            },
+          });
+        }
+
+        // 2. Increment request unitsFulfilled and update request status
+        const currentReq = await tx.bloodRequest.findUnique({
+          where: { id: response.requestId },
+          select: { unitsRequired: true, unitsFulfilled: true },
+        });
+
+        if (currentReq) {
+          const newFulfilled = currentReq.unitsFulfilled + unitsToFulfill;
+          const isFullyFulfilled = newFulfilled >= currentReq.unitsRequired;
+          const remaining = Math.max(0, currentReq.unitsRequired - newFulfilled);
+
+          await tx.bloodRequest.update({
+            where: { id: response.requestId },
+            data: {
+              unitsFulfilled: newFulfilled,
+              status: isFullyFulfilled ? 'FULFILLED' : 'PARTIALLY_FULFILLED',
+            },
+          });
+
+          updatedRequestData = {
+            id: response.requestId,
+            unitsRequired: currentReq.unitsRequired,
+            unitsFulfilled: newFulfilled,
+            remaining,
+          };
+        }
+
+        // 3. Update DonorProfile stats
+        await tx.donorProfile.update({
+          where: { id: response.donorProfileId },
+          data: {
+            previousDonationCount: { increment: 1 },
+            lastDonationDate: new Date(),
+            donatedBefore: true,
+          },
+        });
+      }
+
+      return resp;
     });
 
     // Notify donor when request owner advances status
@@ -305,12 +399,15 @@ export class ResponsesService {
         response.request.hospitalName ||
         'blood request';
       let msg = `Your response status has been updated to ${dto.status}.`;
+      let link = '/responses';
+
       if (dto.status === 'CONTACTED') {
         msg = `The coordinator for ${targetLabel} has reviewed your response and marked you as contacted.`;
       } else if (dto.status === 'APPOINTMENT_SCHEDULED') {
         msg = `An appointment has been scheduled for your donation (${targetLabel}).`;
       } else if (dto.status === 'COMPLETED') {
-        msg = `Your donation for ${targetLabel} has been marked as completed. Thank you for saving a life!`;
+        msg = `Your donation of ${unitsToFulfill} ${unitsToFulfill === 1 ? 'unit' : 'units'} for ${targetLabel} has been confirmed. Thank you for saving a life!`;
+        link = '/donations';
       } else if (dto.status === 'DECLINED') {
         msg = `Your response for ${targetLabel} could not be accommodated at this time.`;
       }
@@ -321,9 +418,71 @@ export class ResponsesService {
           type: 'REQUEST_UPDATE',
           title: `Response update — ${targetLabel}`,
           message: msg,
-          link: '/responses',
+          link,
         },
       });
+    }
+
+    // Broadcast update to all other eligible donors when donation is completed
+    if (completing && updatedRequestData) {
+      const reqData = updatedRequestData as {
+        id: string;
+        unitsRequired: number;
+        unitsFulfilled: number;
+        remaining: number;
+      };
+      const group =
+        BLOOD_GROUP_LABELS[response.request.bloodGroup] ??
+        response.request.bloodGroup;
+      const recipientName =
+        response.request.creator?.name || 'The recipient';
+      const targetDesc = response.request.patientName
+        ? `for ${response.request.patientName}`
+        : response.request.hospitalName
+          ? `at ${response.request.hospitalName}`
+          : '';
+
+      const otherDonors = await this.prisma.user.findMany({
+        where: {
+          isActive: true,
+          id: {
+            notIn: [
+              user.id,
+              response.donor.userId,
+              response.request.createdByUserId,
+            ],
+          },
+          OR: [
+            { role: { contains: 'dona', mode: 'insensitive' } },
+            { donorProfile: { isNot: null } },
+          ],
+        },
+        select: { id: true },
+      });
+
+      if (otherDonors.length > 0) {
+        if (reqData.remaining > 0) {
+          await this.prisma.notification.createMany({
+            data: otherDonors.map((d) => ({
+              userId: d.id,
+              type: 'REQUEST_UPDATE',
+              title: `Update: ${reqData.remaining} ${reqData.remaining === 1 ? 'unit' : 'units'} needed — ${group}`,
+              message: `${recipientName} has received ${unitsToFulfill} ${unitsToFulfill === 1 ? 'unit' : 'units'}. ${reqData.remaining} ${reqData.remaining === 1 ? 'unit is' : 'units are'} still urgently needed ${targetDesc}. Can you help?`,
+              link: `/notification/${response.requestId}`,
+            })),
+          });
+        } else {
+          await this.prisma.notification.createMany({
+            data: otherDonors.map((d) => ({
+              userId: d.id,
+              type: 'REQUEST_UPDATE',
+              title: `Request Fulfilled — ${group}`,
+              message: `All ${reqData.unitsRequired} units have been fulfilled ${targetDesc}. Thank you to all donors who stepped forward!`,
+              link: `/notification/${response.requestId}`,
+            })),
+          });
+        }
+      }
     }
 
     // Notify request owner if donor withdraws

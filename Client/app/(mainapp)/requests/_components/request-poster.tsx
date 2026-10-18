@@ -312,6 +312,29 @@ export function RequestPoster({
         </div>
       </div>
 
+      {/* Fulfillment Progress Banner */}
+      {(data.unitsFulfilled ?? 0) > 0 && (
+        <div className="relative z-10 mx-5 mt-2 rounded-xl border border-emerald-200 bg-emerald-50/90 p-3 shadow-xs sm:mx-6">
+          <div className="flex items-center justify-between text-xs font-semibold text-emerald-950">
+            <span className="flex items-center gap-1.5">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              {data.unitsFulfilled} of {data.unitsRequired} units fulfilled
+            </span>
+            <span className="font-bold text-emerald-700">
+              {Math.max(0, data.unitsRequired - (data.unitsFulfilled ?? 0))} still needed
+            </span>
+          </div>
+          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-emerald-200/60">
+            <div
+              className="h-full rounded-full bg-emerald-600 transition-all duration-300"
+              style={{
+                width: `${Math.min(100, Math.round(((data.unitsFulfilled ?? 0) / data.unitsRequired) * 100))}%`,
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Stat cards */}
       <div className="relative z-10 grid grid-cols-2 gap-2 px-5 pt-3 sm:grid-cols-4 sm:px-6">
         <div className="flex flex-col items-center gap-1 rounded-xl border border-rose-100/80 bg-white/80 px-2 py-3 text-center shadow-sm backdrop-blur-sm">
@@ -326,10 +349,12 @@ export function RequestPoster({
         <div className="flex flex-col items-center gap-1 rounded-xl border border-rose-100/80 bg-white/80 px-2 py-3 text-center shadow-sm backdrop-blur-sm">
           <Droplets className="h-6 w-6 text-red-600" />
           <p className="font-display text-xl font-black text-rose-950">
-            {data.unitsRequired}
+            {(data.unitsFulfilled ?? 0) > 0
+              ? Math.max(0, data.unitsRequired - (data.unitsFulfilled ?? 0))
+              : data.unitsRequired}
           </p>
           <p className="text-[10px] font-medium text-muted-foreground">
-            Units Required
+            {(data.unitsFulfilled ?? 0) > 0 ? "Units Needed" : "Units Required"}
           </p>
         </div>
         <div className="flex flex-col items-center gap-1 rounded-xl border border-rose-100/80 bg-white/80 px-2 py-3 text-center shadow-sm backdrop-blur-sm">

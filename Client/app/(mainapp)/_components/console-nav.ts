@@ -1,4 +1,5 @@
 import {
+  Award,
   Building2,
   CalendarClock,
   Droplet,
@@ -37,6 +38,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/blood-banks", label: "Blood Banks", icon: Building2,  resource: "users" },
   { href: "/requests",    label: "Blood Requests", icon: Droplet, roleIncludes: ["bank", "recip"] },
   { href: "/responses",   label: "My Responses", icon: HeartHandshake, roleIncludes: "dona" },
+  { href: "/donations",   label: "My Donations", icon: Award, roleIncludes: "dona" },
   { href: "/appointments", label: "Appointments", icon: CalendarClock, roleIncludes: "bank" },
   { href: "/appointments", label: "My Appointments", icon: CalendarClock, roleIncludes: "dona" },
 ];

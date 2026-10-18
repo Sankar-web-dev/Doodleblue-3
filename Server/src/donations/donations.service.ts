@@ -26,12 +26,18 @@ const DONATION_INCLUDE = {
     select: {
       id: true,
       bloodGroup: true,
+      component: true,
       urgency: true,
       status: true,
       city: true,
       state: true,
       hospitalName: true,
+      patientName: true,
+      requestType: true,
+      contactName: true,
+      contactPhone: true,
       createdByUserId: true,
+      creator: { select: { id: true, name: true } },
     },
   },
   donor: {

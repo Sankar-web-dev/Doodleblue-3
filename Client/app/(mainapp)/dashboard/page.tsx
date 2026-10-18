@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
+  Award,
   Users,
   ShieldCheck,
   UserCheck,
@@ -214,23 +215,26 @@ export default function DashboardPage() {
           </Card>
 
           {/* Donations Made */}
-          <Card className="animate-fade-up border-border/80 shadow-xs">
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-tertiary/15 text-tertiary">
-                <HeartHandshake className="h-5 w-5" />
-              </div>
-              <div className="min-w-0">
-                <p className="font-display text-2xl font-bold leading-none tracking-tight">
-                  {isDonorLoading ? (
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                  ) : (
-                    donorData?.previousDonationCount ?? 0
-                  )}
-                </p>
-                <p className="mt-1 text-xs font-medium text-muted-foreground">Total Donations Made</p>
-              </div>
-            </CardContent>
-          </Card>
+          <Link href="/donations" className="block">
+            <Card className="animate-fade-up border-border/80 shadow-xs transition-all hover:border-primary/40 hover:shadow-sm">
+              <CardContent className="flex items-center gap-4 p-5">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-tertiary/15 text-tertiary">
+                  <HeartHandshake className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-display text-2xl font-bold leading-none tracking-tight">
+                    {isDonorLoading ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    ) : (
+                      donorData?.previousDonationCount ?? 0
+                    )}
+                  </p>
+                  <p className="mt-1 text-xs font-medium text-muted-foreground">Total Donations Made</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
+              </CardContent>
+            </Card>
+          </Link>
 
           {/* Travel Range */}
           <Card className="animate-fade-up border-border/80 shadow-xs">
@@ -329,6 +333,20 @@ export default function DashboardPage() {
               <CardDescription>Donor portal navigation</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 pt-1">
+              <Link
+                href="/donations"
+                className="group flex items-center gap-3 rounded-xl border border-border/80 p-3.5 transition-all hover:border-primary/40 hover:bg-muted/40"
+              >
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+                  <Award className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate">My Donations &amp; Certificates</p>
+                  <p className="text-xs text-muted-foreground truncate">View life-saving history</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+              </Link>
+
               <Link
                 href="/onboarding/donor"
                 className="group flex items-center gap-3 rounded-xl border border-border/80 p-3.5 transition-all hover:border-primary/40 hover:bg-muted/40"
