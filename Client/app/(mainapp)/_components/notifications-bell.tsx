@@ -194,11 +194,23 @@ export function NotificationsBell() {
             <ul className="divide-y divide-border/50">
               {notifications.map((n) => {
                 const Icon = TYPE_ICONS[n.type] ?? Info;
-                const requestId = requestIdFromLink(n.link);
-                const href = requestId
-                  ? `/notification/${requestId}`
-                  : (n.link ?? null);
+                let href: string | null = n.link ?? null;
+                if (n.type === "BLOOD_REQUEST") {
+                  const requestId = requestIdFromLink(n.link);
+                  href = requestId ? `/notification/${requestId}` : (n.link ?? null);
+                }
                 const canView = !!href;
+                const typeColorClasses =
+                  n.type === "BLOOD_REQUEST"
+                    ? "bg-rose-500/10 text-rose-500"
+                    : n.type === "DONOR_RESPONSE"
+                    ? "bg-primary/10 text-primary"
+                    : n.type === "APPOINTMENT"
+                    ? "bg-indigo-500/10 text-indigo-500"
+                    : n.type === "REQUEST_UPDATE"
+                    ? "bg-amber-500/10 text-amber-600"
+                    : "bg-muted text-muted-foreground";
+
                 return (
                   <li
                     key={n.id}
@@ -207,11 +219,7 @@ export function NotificationsBell() {
                     }`}
                   >
                     <span
-                      className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-                        n.type === "BLOOD_REQUEST"
-                          ? "bg-primary/10 text-primary"
-                          : "bg-muted text-muted-foreground"
-                      }`}
+                      className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${typeColorClasses}`}
                     >
                       <Icon className="h-4 w-4" />
                     </span>

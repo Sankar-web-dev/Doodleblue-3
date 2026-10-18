@@ -116,7 +116,9 @@ export function RespondView({ requestId }: RespondViewProps) {
     onSuccess: () => {
       toast.success("Response sent", {
         description:
-          "The institution can now contact you to schedule the donation.",
+          request?.requestType === "RECIPIENT"
+            ? "The recipient and family have been notified and can contact you to coordinate."
+            : "The institution can now contact you to schedule the donation.",
       });
       setSent(true);
     },
@@ -211,10 +213,14 @@ export function RespondView({ requestId }: RespondViewProps) {
     body = gateCard({
       icon: <CheckCircle2 className="h-10 w-10 text-emerald-500" />,
       title: sent ? "Response sent" : "Response already sent",
-      body: "The institution has your response — they'll contact you to schedule the donation.",
+      body:
+        request?.requestType === "RECIPIENT"
+          ? "The recipient and their family have your response — they will contact you to coordinate the donation."
+          : "The institution has your response — they'll contact you to schedule the donation.",
       action: { href: "/responses", label: "View my responses" },
     });
   } else {
+    const isRecipientReq = request?.requestType === "RECIPIENT";
     body = (
       <Card className="border-border/80 shadow-xs">
         <CardHeader className="pb-2">
@@ -224,9 +230,9 @@ export function RespondView({ requestId }: RespondViewProps) {
           </CardTitle>
           <p className="text-sm text-muted-foreground">
             {request
-              ? `Let them know you can help with the ${bloodGroupLabel} request in ${request.city}.`
+              ? `Let them know you can help with the ${bloodGroupLabel} ${isRecipientReq ? "appeal" : "request"} in ${request.city}${isRecipientReq && request.patientName ? ` for ${request.patientName}` : ""}.`
               : "Let them know you can help."}{" "}
-            They will contact you to schedule the donation.
+            They will contact you to coordinate the donation.
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -306,8 +312,8 @@ export function RespondView({ requestId }: RespondViewProps) {
           </h1>
           <p className="text-sm text-muted-foreground">
             {request
-              ? `${bloodGroupLabel} request · ${request.city}`
-              : "Tell the institution you can help"}
+              ? `${bloodGroupLabel} ${request.requestType === "RECIPIENT" ? "appeal" : "request"} · ${request.city}`
+              : "Offer your support to help save a life"}
           </p>
         </div>
       </div>

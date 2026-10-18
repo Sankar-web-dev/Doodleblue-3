@@ -106,10 +106,14 @@ export function NotificationView({ requestId }: NotificationViewProps) {
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold tracking-tight">
-            Blood Request
+            {request?.requestType === "RECIPIENT"
+              ? "Urgent Blood Appeal"
+              : "Blood Request"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            An institution is looking for donors — every drop counts.
+            {request?.requestType === "RECIPIENT"
+              ? "A recipient in need is looking for eligible donors — every drop counts."
+              : "An institution is looking for donors — every drop counts."}
           </p>
         </div>
         <Button variant="outline" size="sm" asChild className="shrink-0 gap-2">

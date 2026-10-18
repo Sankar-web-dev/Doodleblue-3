@@ -81,13 +81,25 @@ function formatDate(iso?: string | null) {
   });
 }
 
-export function RequestsView() {
+interface RequestsViewProps {
+  initialResponsesRequestId?: string;
+}
+
+export function RequestsView({
+  initialResponsesRequestId,
+}: RequestsViewProps = {}) {
   const { user, isPending: userPending } = useAuthUser();
   const [posterRequest, setPosterRequest] = useState<BloodRequest | null>(null);
   const [cancelTarget, setCancelTarget] = useState<BloodRequest | null>(null);
+  const [prevInitialId, setPrevInitialId] = useState(initialResponsesRequestId);
   const [responsesRequestId, setResponsesRequestId] = useState<string | null>(
-    null
+    initialResponsesRequestId ?? null
   );
+
+  if (initialResponsesRequestId !== prevInitialId) {
+    setPrevInitialId(initialResponsesRequestId);
+    setResponsesRequestId(initialResponsesRequestId ?? null);
+  }
 
   const roleLower = (user?.role || "").toLowerCase();
   const isRecipient = roleLower.includes("recip");

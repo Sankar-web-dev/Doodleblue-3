@@ -3,11 +3,8 @@
 import {
   Building2,
   CheckCircle2,
-  Globe,
-  Mail,
   MapPin,
   PauseCircle,
-  Phone,
   UserCog,
   XCircle,
 } from "lucide-react";

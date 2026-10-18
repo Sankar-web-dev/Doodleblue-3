@@ -11,6 +11,18 @@ import {
   UpdateDonorResponseDto,
 } from './dto.js';
 
+const BLOOD_GROUP_LABELS: Record<string, string> = {
+  O_POSITIVE: 'O+',
+  O_NEGATIVE: 'O-',
+  A_POSITIVE: 'A+',
+  A_NEGATIVE: 'A-',
+  B_POSITIVE: 'B+',
+  B_NEGATIVE: 'B-',
+  AB_POSITIVE: 'AB+',
+  AB_NEGATIVE: 'AB-',
+  UNKNOWN: 'Any group',
+};
+
 const RESPONSE_INCLUDE = {
   request: {
     select: {
@@ -23,6 +35,7 @@ const RESPONSE_INCLUDE = {
       state: true,
       hospitalName: true,
       patientName: true,
+      requestType: true,
       createdByUserId: true,
     },
   },
@@ -30,7 +43,15 @@ const RESPONSE_INCLUDE = {
     select: {
       id: true,
       bloodGroup: true,
-      user: { select: { id: true, name: true, image: true } },
+      user: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+          email: true,
+          personalProfile: { select: { phoneNumber: true } },
+        },
+      },
     },
   },
 } as const;
@@ -48,7 +69,16 @@ export class ResponsesService {
 
     const request = await this.prisma.bloodRequest.findUnique({
       where: { id: dto.requestId },
-      select: { id: true, status: true },
+      select: {
+        id: true,
+        status: true,
+        createdByUserId: true,
+        bloodGroup: true,
+        requestType: true,
+        patientName: true,
+        hospitalName: true,
+        city: true,
+      },
     });
     if (!request) {
       throw new ApiException(
@@ -82,7 +112,7 @@ export class ResponsesService {
       );
     }
 
-    return this.prisma.donorResponse.create({
+    const created = await this.prisma.donorResponse.create({
       data: {
         requestId: dto.requestId,
         donorProfileId: donor.id,
@@ -91,6 +121,31 @@ export class ResponsesService {
       },
       include: RESPONSE_INCLUDE,
     });
+
+    // Notify request creator (Recipient or Blood Bank)
+    if (request.createdByUserId && request.createdByUserId !== user.id) {
+      const group = BLOOD_GROUP_LABELS[request.bloodGroup] ?? request.bloodGroup;
+      const isRecipient = request.requestType === 'RECIPIENT';
+      const context =
+        isRecipient && request.patientName
+          ? `for ${request.patientName}`
+          : request.hospitalName
+            ? `at ${request.hospitalName}`
+            : `in ${request.city}`;
+      const unitsText = `${dto.unitsOffered ?? 1} ${(dto.unitsOffered ?? 1) === 1 ? 'unit' : 'units'}`;
+
+      await this.prisma.notification.create({
+        data: {
+          userId: request.createdByUserId,
+          type: 'DONOR_RESPONSE',
+          title: `New donor response — ${group}`,
+          message: `${user.name} offered ${unitsText} of ${group} blood (${context})${dto.message ? `: "${dto.message}"` : ''}`,
+          link: `/requests?responses=${request.id}`,
+        },
+      });
+    }
+
+    return created;
   }
 
   /** The caller's own responses. */
@@ -184,7 +239,16 @@ export class ResponsesService {
     const response = await this.prisma.donorResponse.findUnique({
       where: { id },
       include: {
-        request: { select: { createdByUserId: true } },
+        request: {
+          select: {
+            id: true,
+            createdByUserId: true,
+            bloodGroup: true,
+            patientName: true,
+            hospitalName: true,
+            requestType: true,
+          },
+        },
         donor: { select: { userId: true } },
       },
     });
@@ -223,7 +287,7 @@ export class ResponsesService {
       }
     }
 
-    return this.prisma.donorResponse.update({
+    const updated = await this.prisma.donorResponse.update({
       where: { id },
       data: {
         status: dto.status,
@@ -233,13 +297,64 @@ export class ResponsesService {
       },
       include: RESPONSE_INCLUDE,
     });
+
+    // Notify donor when request owner advances status
+    if (isRequestOwner && dto.status && dto.status !== response.status) {
+      const targetLabel =
+        response.request.patientName ||
+        response.request.hospitalName ||
+        'blood request';
+      let msg = `Your response status has been updated to ${dto.status}.`;
+      if (dto.status === 'CONTACTED') {
+        msg = `The coordinator for ${targetLabel} has reviewed your response and marked you as contacted.`;
+      } else if (dto.status === 'APPOINTMENT_SCHEDULED') {
+        msg = `An appointment has been scheduled for your donation (${targetLabel}).`;
+      } else if (dto.status === 'COMPLETED') {
+        msg = `Your donation for ${targetLabel} has been marked as completed. Thank you for saving a life!`;
+      } else if (dto.status === 'DECLINED') {
+        msg = `Your response for ${targetLabel} could not be accommodated at this time.`;
+      }
+
+      await this.prisma.notification.create({
+        data: {
+          userId: response.donor.userId,
+          type: 'REQUEST_UPDATE',
+          title: `Response update — ${targetLabel}`,
+          message: msg,
+          link: '/responses',
+        },
+      });
+    }
+
+    // Notify request owner if donor withdraws
+    if (
+      isDonor &&
+      (dto.status === 'CANCELLED' || dto.status === 'DECLINED') &&
+      response.request.createdByUserId &&
+      response.request.createdByUserId !== user.id
+    ) {
+      await this.prisma.notification.create({
+        data: {
+          userId: response.request.createdByUserId,
+          type: 'DONOR_RESPONSE',
+          title: 'Donor response withdrawn',
+          message: `${user.name} withdrew their response for the blood request.`,
+          link: `/requests?responses=${response.request.id}`,
+        },
+      });
+    }
+
+    return updated;
   }
 
   /** Withdraw — donor deletes their own response (or admin). */
   async remove(id: string, user: UserModel, role: RoleModel | null) {
     const response = await this.prisma.donorResponse.findUnique({
       where: { id },
-      select: { donor: { select: { userId: true } } },
+      select: {
+        donor: { select: { userId: true } },
+        request: { select: { id: true, createdByUserId: true } },
+      },
     });
     if (!response) {
       throw new ApiException(
@@ -259,5 +374,21 @@ export class ResponsesService {
       );
     }
     await this.prisma.donorResponse.delete({ where: { id } });
+
+    // Notify request owner if donor withdraws/deletes response
+    if (
+      response.request.createdByUserId &&
+      response.request.createdByUserId !== user.id
+    ) {
+      await this.prisma.notification.create({
+        data: {
+          userId: response.request.createdByUserId,
+          type: 'DONOR_RESPONSE',
+          title: 'Donor response withdrawn',
+          message: `${user.name} withdrew their response for the blood request.`,
+          link: `/requests?responses=${response.request.id}`,
+        },
+      });
+    }
   }
 }

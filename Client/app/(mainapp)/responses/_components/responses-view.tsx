@@ -113,10 +113,9 @@ export function ResponsesView() {
                     ? (BLOOD_GROUP_LABELS[req.bloodGroup] ?? req.bloodGroup)
                     : "—"}
                   {" · "}
-                  {req?.hospitalName ||
-                    (req?.patientName
-                      ? `For ${req.patientName}`
-                      : "Blood request")}
+                  {req?.patientName
+                    ? `For ${req.patientName}${req?.hospitalName ? ` (${req.hospitalName})` : ""}`
+                    : (req?.hospitalName || "Blood request")}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
                   {req?.component

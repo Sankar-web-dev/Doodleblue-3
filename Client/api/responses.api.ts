@@ -34,11 +34,18 @@ export interface DonorResponse {
     state?: string;
     hospitalName?: string | null;
     patientName?: string | null;
+    requestType?: "BLOOD_BANK" | "RECIPIENT";
   } | null;
   donor?: {
     id: string;
     bloodGroup?: BloodGroup | null;
-    user?: { id: string; name: string; image?: string | null } | null;
+    user?: {
+      id: string;
+      name: string;
+      image?: string | null;
+      email?: string | null;
+      personalProfile?: { phoneNumber?: string | null } | null;
+    } | null;
   } | null;
 }
 

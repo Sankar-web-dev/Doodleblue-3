@@ -8,6 +8,8 @@ import {
   Droplet,
   HeartHandshake,
   Loader2,
+  Mail,
+  Phone,
 } from "lucide-react";
 
 import {
@@ -185,6 +187,29 @@ export function RequestResponsesDialog({
                   <p className="text-xs italic text-muted-foreground">
                     &quot;{r.message}&quot;
                   </p>
+                )}
+                {(r.donor?.user?.personalProfile?.phoneNumber ||
+                  r.donor?.user?.email) && (
+                  <div className="flex flex-wrap items-center gap-3 pt-1 text-xs">
+                    {r.donor?.user?.personalProfile?.phoneNumber && (
+                      <a
+                        href={`tel:${r.donor.user.personalProfile.phoneNumber}`}
+                        className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+                      >
+                        <Phone className="h-3 w-3" />
+                        {r.donor.user.personalProfile.phoneNumber}
+                      </a>
+                    )}
+                    {r.donor?.user?.email && (
+                      <a
+                        href={`mailto:${r.donor.user.email}`}
+                        className="inline-flex items-center gap-1 text-muted-foreground hover:underline"
+                      >
+                        <Mail className="h-3 w-3" />
+                        {r.donor.user.email}
+                      </a>
+                    )}
+                  </div>
                 )}
               </div>
 
