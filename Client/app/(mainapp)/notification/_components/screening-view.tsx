@@ -1,13 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   ArrowLeft,
+  Clock,
   ClipboardCheck,
+  HeartPulse,
   Loader2,
+  RefreshCcw,
   ShieldAlert,
   ShieldCheck,
   TriangleAlert,
@@ -167,7 +171,7 @@ export function ScreeningView({ requestId }: ScreeningViewProps) {
     requestQuery.isLoading || profileQuery.isLoading || donationsQuery.isLoading;
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 px-4 py-8">
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" asChild>
           <Link href={`/notification/${requestId}`}>
@@ -186,6 +190,8 @@ export function ScreeningView({ requestId }: ScreeningViewProps) {
         </div>
       </div>
 
+      <div className="grid gap-10 md:grid-cols-[1.15fr_0.85fr]">
+        <div className="space-y-6">
       {loading ? (
         <div className="flex min-h-[40vh] items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -323,6 +329,79 @@ export function ScreeningView({ requestId }: ScreeningViewProps) {
           </CardContent>
         </Card>
       )}
+        </div>
+
+        {/* Illustration + why-it-matters card */}
+        <aside className="hidden md:block">
+          <Card className="flex h-full flex-col overflow-hidden border-border/80 shadow-xs">
+            <div className="flex max-h-72 flex-1 items-center justify-center bg-gradient-to-b from-rose-500/10 via-card to-card p-6">
+              <Image
+                src="/donate-b.svg"
+                alt="Illustration of a blood donation"
+                width={500}
+                height={500}
+                priority
+                className="max-h-full w-auto max-w-full object-contain"
+              />
+            </div>
+            <CardContent className="space-y-4 p-6 pt-2">
+              <h2 className="font-display text-lg font-bold tracking-tight">
+                Why this screening matters
+              </h2>
+              <ul className="space-y-3 text-sm">
+                <li className="flex items-start gap-3">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+                    <ShieldCheck className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p className="font-semibold text-[16px]">Keeps you safe</p>
+                    <p className="text-[15px] leading-relaxed text-muted-foreground">
+                      A quick check that donating is safe for your own health.
+                    </p>
+                  </div>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-500/10 text-rose-600">
+                    <HeartPulse className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p className="font-semibold text-[16px]">Protects the patient</p>
+                    <p className="text-[15px] leading-relaxed text-muted-foreground">
+                      Ensures every unit given is safe for the person who
+                      receives it.
+                    </p>
+                  </div>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600">
+                    <Clock className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p className="font-semibold text-[16px]">Takes under a minute</p>
+                    <p className="text-[15px] leading-relaxed text-muted-foreground">
+                      Five yes-or-no questions — then you&apos;re ready to
+                      respond.
+                    </p>
+                  </div>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <RefreshCcw className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p className="font-semibold text-[16px]">Checked every visit</p>
+                    <p className="text-[15px] leading-relaxed text-muted-foreground">
+                      Screening is repeated before each donation — even if
+                      you&apos;ve donated before.
+                    </p>
+                  </div>
+                </li>
+              </ul>
+            
+            </CardContent>
+          </Card>
+        </aside>
+      </div>
     </div>
   );
 }
