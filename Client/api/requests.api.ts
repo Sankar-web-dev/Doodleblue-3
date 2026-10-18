@@ -37,6 +37,7 @@ export interface BloodRequest {
   patientName?: string | null;
   patientAge?: number | null;
   relationshipToPatient?: string | null;
+  reason?: string | null;
   hospitalName?: string | null;
   hospitalAddress?: string | null;
   city: string;
@@ -71,6 +72,7 @@ export interface BloodRequestInput {
   patientName?: string;
   patientAge?: number;
   relationshipToPatient?: string;
+  reason?: string;
   hospitalName?: string;
   hospitalAddress?: string;
   city: string;

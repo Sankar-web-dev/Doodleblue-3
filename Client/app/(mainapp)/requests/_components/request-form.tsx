@@ -519,6 +519,23 @@ export function RequestForm({
             />
             <FieldError message={err("relationshipToPatient")} />
           </div>
+          <div className="space-y-2 sm:col-span-3">
+            <Label
+              htmlFor="reason"
+              className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+            >
+              Reason for Request / Condition
+            </Label>
+            <Input
+              id="reason"
+              placeholder="e.g., Lung surgery, orthopedic operation, accident trauma"
+              {...register("reason")}
+            />
+            <FieldError message={err("reason")} />
+            <p className="text-xs text-muted-foreground">
+              Specify the surgery or medical condition requiring blood (e.g., lung surgery, leg fracture operation, urgent medical procedure).
+            </p>
+          </div>
         </CardContent>
       </Card>
 

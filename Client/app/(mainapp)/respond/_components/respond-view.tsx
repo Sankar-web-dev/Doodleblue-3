@@ -230,7 +230,7 @@ export function RespondView({ requestId }: RespondViewProps) {
           </CardTitle>
           <p className="text-sm text-muted-foreground">
             {request
-              ? `Let them know you can help with the ${bloodGroupLabel} ${isRecipientReq ? "appeal" : "request"} in ${request.city}${isRecipientReq && request.patientName ? ` for ${request.patientName}` : ""}.`
+              ? `Let them know you can help with the ${bloodGroupLabel} ${isRecipientReq ? "appeal" : "request"} in ${request.city}${isRecipientReq && request.patientName ? ` for ${request.patientName}` : ""}${request.reason ? ` (${request.reason})` : ""}.`
               : "Let them know you can help."}{" "}
             They will contact you to coordinate the donation.
           </p>

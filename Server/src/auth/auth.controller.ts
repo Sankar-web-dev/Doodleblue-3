@@ -43,11 +43,14 @@ function sessionCookieOptions() {
   };
 }
 
+import { StorageService } from '../storage/storage.service.js';
+
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly auth: AuthService,
     private readonly prisma: PrismaService,
+    private readonly storage: StorageService,
   ) {}
 
   @Post('login')
@@ -159,7 +162,7 @@ export class AuthController {
   @Post('upload-avatar')
   @Throttle({ default: { limit: 10, ttl: 900_000 } })
   @UseInterceptors(FileInterceptor('avatar', avatarMulterOptions))
-  uploadAvatar(@UploadedFile() file?: Express.Multer.File) {
+  async uploadAvatar(@UploadedFile() file?: Express.Multer.File) {
     if (!file) {
       throw new ApiException(
         400,
@@ -167,10 +170,12 @@ export class AuthController {
         'No image file provided',
       );
     }
+    const saved = await this.storage.saveFile(file);
     return {
       data: {
-        url: `/uploads/profiles/${file.filename}`,
-        filename: file.filename,
+        url: saved.url,
+        filename: saved.filename,
+        id: saved.id,
       },
     };
   }

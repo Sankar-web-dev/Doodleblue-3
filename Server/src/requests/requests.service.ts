@@ -82,6 +82,7 @@ export class RequestsService {
         patientName: dto.patientName,
         patientAge: dto.patientAge,
         relationshipToPatient: dto.relationshipToPatient,
+        reason: dto.reason,
         hospitalName: dto.hospitalName,
         hospitalAddress: dto.hospitalAddress,
         city: dto.city,
@@ -181,6 +182,12 @@ export class RequestsService {
                   mode: 'insensitive' as const,
                 },
               },
+              {
+                reason: {
+                  contains: query.search,
+                  mode: 'insensitive' as const,
+                },
+              },
             ],
           }
         : {}),
@@ -250,6 +257,7 @@ export class RequestsService {
         patientName: dto.patientName,
         patientAge: dto.patientAge,
         relationshipToPatient: dto.relationshipToPatient,
+        reason: dto.reason,
         hospitalName: dto.hospitalName,
         hospitalAddress: dto.hospitalAddress,
         city: dto.city,

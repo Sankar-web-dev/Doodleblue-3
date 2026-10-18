@@ -197,6 +197,11 @@ export function RequestsView({
                     </span>
                   )}
                 </div>
+                {r.reason && (
+                  <div className="text-[11px] text-primary/90 font-medium truncate">
+                    {r.reason}
+                  </div>
+                )}
                 {r.hospitalName && (
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <Hospital className="h-3 w-3 text-muted-foreground" />

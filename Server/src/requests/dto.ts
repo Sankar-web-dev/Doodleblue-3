@@ -72,6 +72,12 @@ export class CreateBloodRequestDto {
   @Transform(trim)
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  reason?: string;
+
+  @Transform(trim)
+  @IsOptional()
+  @IsString()
   @MaxLength(200)
   hospitalName?: string;
 
@@ -180,6 +186,12 @@ export class UpdateBloodRequestDto {
   @IsString()
   @MaxLength(120)
   relationshipToPatient?: string;
+
+  @Transform(trim)
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  reason?: string;
 
   @Transform(trim)
   @IsOptional()

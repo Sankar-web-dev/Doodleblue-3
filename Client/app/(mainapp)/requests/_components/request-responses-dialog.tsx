@@ -189,6 +189,11 @@ export function RequestResponsesDialog({
                     ? `For ${request.patientName} (${BLOOD_GROUP_LABELS[request.bloodGroup] ?? request.bloodGroup})`
                     : `${BLOOD_GROUP_LABELS[request.bloodGroup] ?? request.bloodGroup} · ${request.hospitalName || request.city}`}
                 </p>
+                {request.reason && (
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Reason: {request.reason}
+                  </p>
+                )}
               </div>
               <Badge
                 variant="outline"

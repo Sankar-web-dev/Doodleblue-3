@@ -4,8 +4,10 @@ import { MailerService } from '../mail/mailer.service.js';
 import { UsersController } from './users.controller.js';
 import { UsersService } from './users.service.js';
 
+import { StorageModule } from '../storage/storage.module.js';
+
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, StorageModule],
   controllers: [UsersController],
   providers: [UsersService, MailerService],
 })

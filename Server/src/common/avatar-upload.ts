@@ -1,23 +1,7 @@
-import { diskStorage } from 'multer';
-import fs from 'fs';
-import path from 'path';
+import { memoryStorage } from 'multer';
 import { ApiException } from './api-error.js';
 
-const UPLOAD_ROOT = path.resolve(process.cwd(), 'uploads', 'profiles');
-
-export const avatarStorage = diskStorage({
-  destination: (_req, _file, cb) => {
-    if (!fs.existsSync(UPLOAD_ROOT)) {
-      fs.mkdirSync(UPLOAD_ROOT, { recursive: true });
-    }
-    cb(null, UPLOAD_ROOT);
-  },
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    cb(null, `profile-${uniqueSuffix}${ext}`);
-  },
-});
+export const avatarStorage = memoryStorage();
 
 export const avatarFileFilter = (
   _req: Express.Request,

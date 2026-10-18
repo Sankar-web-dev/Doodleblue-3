@@ -419,6 +419,7 @@ model BloodRequest {
   patientName           String?
   patientAge            Int?
   relationshipToPatient String?
+  reason                String?
 
   hospitalName    String?
   hospitalAddress String?
@@ -604,5 +605,22 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId, isRead, createdAt])
+}
+
+// ======================================================
+// OBJECT STORAGE
+// Database-backed object storage for files (e.g. avatars).
+// ======================================================
+
+model StoredFile {
+  id        String   @id @default(uuid())
+  filename  String
+  mimeType  String
+  size      Int
+  data      Bytes
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
 }
 

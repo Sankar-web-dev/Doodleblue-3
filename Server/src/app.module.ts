@@ -17,6 +17,8 @@ import { AuditModule } from './audit/audit.module.js';
 import { ApiExceptionFilter } from './common/api-exception.filter.js';
 import { EnvelopeInterceptor } from './common/envelope.interceptor.js';
 
+import { StorageModule } from './storage/storage.module.js';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -31,6 +33,7 @@ import { EnvelopeInterceptor } from './common/envelope.interceptor.js';
       },
     ]),
     PrismaModule,
+    StorageModule,
     AuthModule,
     UsersModule,
     RolesModule,

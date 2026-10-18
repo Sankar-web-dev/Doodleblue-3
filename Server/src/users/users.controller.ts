@@ -30,11 +30,16 @@ import {
   UpdateUserDto,
 } from './dto.js';
 
+import { StorageService } from '../storage/storage.service.js';
+
 // User-account provisioning — SUPER_ADMIN (or any role granted users:*).
 @Controller('users')
 @UseGuards(AuthGuard, RequirePasswordChangedGuard, PermissionsGuard)
 export class UsersController {
-  constructor(private readonly users: UsersService) {}
+  constructor(
+    private readonly users: UsersService,
+    private readonly storage: StorageService,
+  ) {}
 
   @Post()
   @RequirePermission('users', 'create')
@@ -45,7 +50,7 @@ export class UsersController {
   @Post('upload-avatar')
   @RequirePermission('users', 'create')
   @UseInterceptors(FileInterceptor('avatar', avatarMulterOptions))
-  uploadAvatar(@UploadedFile() file?: Express.Multer.File) {
+  async uploadAvatar(@UploadedFile() file?: Express.Multer.File) {
     if (!file) {
       throw new ApiException(
         400,
@@ -53,10 +58,12 @@ export class UsersController {
         'No image file provided',
       );
     }
+    const saved = await this.storage.saveFile(file);
     return {
       data: {
-        url: `/uploads/profiles/${file.filename}`,
-        filename: file.filename,
+        url: saved.url,
+        filename: saved.filename,
+        id: saved.id,
       },
     };
   }

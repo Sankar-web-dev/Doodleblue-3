@@ -110,6 +110,7 @@ export const bloodRequestFormSchema = z.object({
     .max(120, "Invalid age")
     .optional(),
   relationshipToPatient: z.string().max(120).optional(),
+  reason: z.string().max(255).optional(),
 
   hospitalName: z.string().max(200).optional(),
   hospitalAddress: z.string().max(300).optional(),
@@ -139,6 +140,7 @@ export const BLOOD_REQUEST_FORM_DEFAULTS: BloodRequestFormValues = {
   patientName: "",
   patientAge: undefined,
   relationshipToPatient: "",
+  reason: "",
 
   hospitalName: "",
   hospitalAddress: "",
@@ -182,6 +184,7 @@ export function toRequestInput(
     patientName: emptyToUndefined(values.patientName),
     patientAge: values.patientAge,
     relationshipToPatient: emptyToUndefined(values.relationshipToPatient),
+    reason: emptyToUndefined(values.reason),
     hospitalName: emptyToUndefined(values.hospitalName),
     hospitalAddress: emptyToUndefined(values.hospitalAddress),
     city: values.city.trim(),
@@ -209,6 +212,7 @@ export function fromRequest(request: BloodRequest): BloodRequestFormValues {
     patientName: request.patientName ?? "",
     patientAge: request.patientAge ?? undefined,
     relationshipToPatient: request.relationshipToPatient ?? "",
+    reason: request.reason ?? "",
     hospitalName: request.hospitalName ?? "",
     hospitalAddress: request.hospitalAddress ?? "",
     city: request.city ?? "",
@@ -242,6 +246,7 @@ export interface RequestPosterData {
   patientName?: string | null;
   patientAge?: number | null;
   relationshipToPatient?: string | null;
+  reason?: string | null;
   hospitalName?: string | null;
   hospitalAddress?: string | null;
   city?: string | null;
@@ -273,6 +278,7 @@ export function posterDataFromValues(
     patientName: emptyToUndefined(values.patientName),
     patientAge: values.patientAge,
     relationshipToPatient: emptyToUndefined(values.relationshipToPatient),
+    reason: emptyToUndefined(values.reason),
     hospitalName: emptyToUndefined(values.hospitalName),
     hospitalAddress: emptyToUndefined(values.hospitalAddress),
     city: emptyToUndefined(values.city),
@@ -305,6 +311,7 @@ export function posterDataFromRequest(
     patientName: request.patientName,
     patientAge: request.patientAge,
     relationshipToPatient: request.relationshipToPatient,
+    reason: request.reason,
     hospitalName: request.hospitalName,
     hospitalAddress: request.hospitalAddress,
     city: request.city,

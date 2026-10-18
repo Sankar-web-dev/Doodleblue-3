@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import {
-  Activity,
   ArrowRight,
   CalendarDays,
   CheckCircle2,
@@ -17,6 +16,7 @@ import {
   StickyNote,
   UserRound,
   Zap,
+  Activity,
 } from "lucide-react";
 import type { BloodUrgency } from "@/api/requests.api";
 import {
@@ -423,6 +423,11 @@ export function RequestPoster({
             icon={HeartHandshake}
             label="Relationship"
             value={data.relationshipToPatient}
+          />
+          <InfoRow
+            icon={Activity}
+            label="Reason / Condition"
+            value={data.reason}
           />
         </SectionCard>
 

@@ -6,9 +6,11 @@ import { AuthGuard } from './auth.guard.js';
 import { PermissionsGuard } from './permissions.guard.js';
 import { RequirePasswordChangedGuard } from './require-password-changed.guard.js';
 
+import { StorageModule } from '../storage/storage.module.js';
+
 @Global()
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, StorageModule],
   controllers: [AuthController],
   providers: [
     AuthService,
