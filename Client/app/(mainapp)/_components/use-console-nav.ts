@@ -15,20 +15,32 @@ import { NAV_ITEMS, type NavItem } from "./console-nav";
 export function useConsoleNav(user: AuthUser | null): NavItem[] {
   const { can } = usePermissions(user);
 
-  return useMemo(
-    () =>
-      NAV_ITEMS.filter((item) => {
-        if (user?.role === "SUPER_ADMIN") return true;
-        if (item.resource && !can(item.resource, "read")) return false;
-        if (item.roleIncludes) {
-          const roleLower = (user?.role ?? "").toLowerCase();
-          const matches = Array.isArray(item.roleIncludes)
-            ? item.roleIncludes.some((r) => roleLower.includes(r.toLowerCase()))
-            : roleLower.includes(item.roleIncludes.toLowerCase());
-          if (!matches) return false;
-        }
+  return useMemo(() => {
+    const isSuperAdmin = user?.role === "SUPER_ADMIN";
+    const roleLower = (user?.role ?? "").toLowerCase();
+    const seenHrefs = new Set<string>();
+
+    return NAV_ITEMS.filter((item) => {
+      if (isSuperAdmin) {
+        // SUPER_ADMIN sees the general "Appointments" link, omit duplicate donor-specific label
+        if (item.label === "My Appointments") return false;
+        if (seenHrefs.has(item.href)) return false;
+        seenHrefs.add(item.href);
         return true;
-      }),
-    [can, user?.role]
-  );
+      }
+
+      if (item.resource && !can(item.resource, "read")) return false;
+
+      if (item.roleIncludes) {
+        const matches = Array.isArray(item.roleIncludes)
+          ? item.roleIncludes.some((r) => roleLower.includes(r.toLowerCase()))
+          : roleLower.includes(item.roleIncludes.toLowerCase());
+        if (!matches) return false;
+      }
+
+      if (seenHrefs.has(item.href)) return false;
+      seenHrefs.add(item.href);
+      return true;
+    });
+  }, [can, user?.role]);
 }
