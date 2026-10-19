@@ -37,6 +37,7 @@ import {
 import GenericTable from "@/components/ui/generic-table";
 
 import { useAuthUser } from "@/lib/use-auth-user";
+import { usePermissions } from "@/lib/permissions";
 import { ForbiddenState } from "../../_components/forbidden-state";
 
 import {
@@ -89,6 +90,7 @@ export function RequestsView({
   initialResponsesRequestId,
 }: RequestsViewProps = {}) {
   const { user, isPending: userPending } = useAuthUser();
+  const { can } = usePermissions(user);
   const [posterRequest, setPosterRequest] = useState<BloodRequest | null>(null);
   const [cancelTarget, setCancelTarget] = useState<BloodRequest | null>(null);
   const [prevInitialId, setPrevInitialId] = useState(initialResponsesRequestId);
@@ -278,16 +280,19 @@ export function RequestsView({
         enableSorting: false,
         cell: ({ row }) => {
           const count = row.original._count?.responses ?? 0;
+          const canViewResponses = can("responses", "read");
           return (
             <Button
               size="sm"
               variant="ghost"
               className="h-8 px-2 text-xs"
-              disabled={count === 0}
+              disabled={count === 0 || !canViewResponses}
               onClick={() => setResponsesRequestId(row.original.id)}
             >
               <span className="font-semibold">{count}</span>
-              {count > 0 && <Eye className="ml-1.5 h-3.5 w-3.5" />}
+              {count > 0 && canViewResponses && (
+                <Eye className="ml-1.5 h-3.5 w-3.5" />
+              )}
             </Button>
           );
         },
@@ -310,7 +315,7 @@ export function RequestsView({
                 <Eye className="mr-1.5 h-3.5 w-3.5" />
                 Poster
               </Button>
-              {isOpen && (
+              {isOpen && can("requests", "update") && (
                 <Button
                   size="sm"
                   variant="ghost"
@@ -323,6 +328,7 @@ export function RequestsView({
                   </Link>
                 </Button>
               )}
+              {can("requests", "update") && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
@@ -363,18 +369,24 @@ export function RequestsView({
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
+              )}
             </div>
           );
         },
       },
     ],
-    [isAdmin, setStatus]
+    [isAdmin, can, setStatus]
   );
 
   if (userPending) return null;
   if (!allowed) {
     return (
       <ForbiddenState message="You need a blood bank or recipient account to manage blood requests." />
+    );
+  }
+  if (!can("requests", "read")) {
+    return (
+      <ForbiddenState message="You don't have permission to view blood requests." />
     );
   }
 
@@ -403,12 +415,14 @@ export function RequestsView({
               : "Manage and oversee all recipient appeals and blood bank requests."}
           </p>
         </div>
-        <Button asChild className="gap-2 self-start sm:self-auto">
-          <Link href="/requests/create">
-            <Plus className="h-4 w-4" />
-            {isRecipient ? "Request Blood" : "New Request"}
-          </Link>
-        </Button>
+        {can("requests", "create") && (
+          <Button asChild className="gap-2 self-start sm:self-auto">
+            <Link href="/requests/create">
+              <Plus className="h-4 w-4" />
+              {isRecipient ? "Request Blood" : "New Request"}
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* KPI Stats Cards */}

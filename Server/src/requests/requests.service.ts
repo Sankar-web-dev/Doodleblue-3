@@ -243,7 +243,7 @@ export class RequestsService {
     role: RoleModel | null,
   ) {
     const request = await this.getRaw(id);
-    assertOwnerOrUsersUpdate(user, role, request.createdByUserId);
+    assertOwnerOrUsersUpdate(user, role, request.createdByUserId, 'requests');
 
     return this.prisma.bloodRequest.update({
       where: { id },
@@ -282,7 +282,7 @@ export class RequestsService {
     role: RoleModel | null,
   ) {
     const request = await this.getRaw(id);
-    assertOwnerOrUsersUpdate(user, role, request.createdByUserId);
+    assertOwnerOrUsersUpdate(user, role, request.createdByUserId, 'requests');
 
     return this.prisma.bloodRequest.update({
       where: { id },

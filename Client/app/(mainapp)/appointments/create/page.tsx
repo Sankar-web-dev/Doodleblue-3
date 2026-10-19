@@ -1,3 +1,4 @@
+import { RequirePermission } from "../../_components/require-permission";
 import { ScheduleView } from "../_components/schedule-view";
 
 interface CreateAppointmentPageProps {
@@ -12,10 +13,16 @@ export default async function CreateAppointmentPage({
     Array.isArray(v) ? v[0] : v;
 
   return (
-    <ScheduleView
-      requestId={str(params.request) ?? ""}
-      donorProfileId={str(params.donor) ?? ""}
-      donorName={str(params.name) ?? ""}
-    />
+    <RequirePermission
+      resource="appointments"
+      action="create"
+      message="You don't have permission to schedule appointments."
+    >
+      <ScheduleView
+        requestId={str(params.request) ?? ""}
+        donorProfileId={str(params.donor) ?? ""}
+        donorName={str(params.name) ?? ""}
+      />
+    </RequirePermission>
   );
 }

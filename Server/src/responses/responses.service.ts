@@ -196,7 +196,7 @@ export class ResponsesService {
     }
     if (
       request.createdByUserId !== user.id &&
-      !hasPermission(user, role, 'users', 'read')
+      !hasPermission(user, role, 'responses', 'read')
     ) {
       throw new ApiException(
         403,
@@ -267,7 +267,7 @@ export class ResponsesService {
     const isDonor = response.donor.userId === user.id;
     const isRequestOwner =
       response.request.createdByUserId === user.id ||
-      hasPermission(user, role, 'users', 'update');
+      hasPermission(user, role, 'responses', 'update');
     if (!isDonor && !isRequestOwner) {
       throw new ApiException(
         403,
@@ -533,7 +533,7 @@ export class ResponsesService {
     }
     if (
       response.donor.userId !== user.id &&
-      !hasPermission(user, role, 'users', 'delete')
+      !hasPermission(user, role, 'responses', 'delete')
     ) {
       throw new ApiException(
         403,

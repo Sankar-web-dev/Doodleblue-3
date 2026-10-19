@@ -24,6 +24,8 @@ import {
 } from "@/api/appointments.api";
 import { ApiRequestError } from "@/lib/api";
 import { useAuthUser } from "@/lib/use-auth-user";
+import { usePermissions } from "@/lib/permissions";
+import { ForbiddenState } from "../../_components/forbidden-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -70,7 +72,8 @@ const formatDateTime = (iso?: string | null) => {
 export function AppointmentsView() {
   const queryClient = useQueryClient();
   const [cancelId, setCancelId] = useState<string | null>(null);
-  const { user } = useAuthUser();
+  const { user, isPending: userPending } = useAuthUser();
+  const { can } = usePermissions(user);
   const isBank = (user?.role ?? "").toLowerCase().includes("bank");
   const listKey = isBank ? MANAGE_APPOINTMENTS_KEY : MY_APPOINTMENTS_KEY;
 
@@ -214,7 +217,7 @@ export function AppointmentsView() {
                   </Link>
                 </Button>
               )}
-              {isBank && CANCELLABLE.includes(a.status) && (
+              {isBank && CANCELLABLE.includes(a.status) && can("appointments", "update") && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -229,7 +232,7 @@ export function AppointmentsView() {
                   </Link>
                 </Button>
               )}
-              {CANCELLABLE.includes(a.status) && (
+              {CANCELLABLE.includes(a.status) && can("appointments", "update") && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -245,8 +248,15 @@ export function AppointmentsView() {
         },
       },
     ],
-    [isBank]
+    [isBank, can]
   );
+
+  if (userPending) return null;
+  if (!can("appointments", "read")) {
+    return (
+      <ForbiddenState message="You don't have permission to view appointments." />
+    );
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-2">

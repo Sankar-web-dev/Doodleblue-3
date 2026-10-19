@@ -1,4 +1,14 @@
-export const RESOURCES = ['roles', 'users'] as const;
+export const RESOURCES = [
+  'roles',
+  'users',
+  'profiles',
+  'requests',
+  'responses',
+  'donations',
+  'appointments',
+  'notifications',
+  'audit',
+] as const;
 export type Resource = (typeof RESOURCES)[number];
 
 export const ACTIONS = ['create', 'read', 'update', 'delete'] as const;

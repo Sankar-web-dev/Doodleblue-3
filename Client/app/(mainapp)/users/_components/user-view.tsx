@@ -24,6 +24,7 @@ import GenericTable from "@/components/ui/generic-table";
 
 import { useAuthUser } from "@/lib/use-auth-user";
 import { usePermissions } from "@/lib/permissions";
+import { ForbiddenState } from "../../_components/forbidden-state";
 import { useUsers } from "../_hooks/use-users";
 import { UserDetailsSheet } from "./user-details-sheet";
 import { DeleteUserDialog } from "./delete-user-dialog";
@@ -167,6 +168,12 @@ export function UsersView() {
     ],
     [router, can]
   );
+
+  if (currentUser && !can("users", "read")) {
+    return (
+      <ForbiddenState message="You don't have permission to view users." />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">

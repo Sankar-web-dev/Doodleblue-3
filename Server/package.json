@@ -17,7 +17,7 @@
     "lint": "oxlint --type-aware src/",
     "test": "vitest run",
     "test:watch": "vitest",
-    "seed": "tsx scripts/seed-super-admin.ts",
+    "seed": "tsx scripts/seed-super-admin.ts && tsx scripts/seed-roles.ts",
     "postinstall": "prisma skills sync || exit 0"
   },
   "dependencies": {

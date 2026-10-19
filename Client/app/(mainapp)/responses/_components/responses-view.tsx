@@ -20,6 +20,9 @@ import {
   responsesApi,
 } from "@/api/responses.api";
 import { ApiRequestError } from "@/lib/api";
+import { useAuthUser } from "@/lib/use-auth-user";
+import { usePermissions } from "@/lib/permissions";
+import { ForbiddenState } from "../../_components/forbidden-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -70,6 +73,8 @@ const formatDate = (iso?: string | null) => {
 export function ResponsesView() {
   const queryClient = useQueryClient();
   const [withdrawId, setWithdrawId] = useState<string | null>(null);
+  const { user, isPending: userPending } = useAuthUser();
+  const { can } = usePermissions(user);
 
   const { data, isPending, error } = useQuery({
     queryKey: MY_RESPONSES_KEY,
@@ -199,7 +204,7 @@ export function ResponsesView() {
                   </Link>
                 </Button>
               )}
-              {WITHDRAWABLE.includes(r.status) && (
+              {WITHDRAWABLE.includes(r.status) && can("responses", "update") && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -215,8 +220,15 @@ export function ResponsesView() {
         },
       },
     ],
-    []
+    [can]
   );
+
+  if (userPending) return null;
+  if (!can("responses", "read")) {
+    return (
+      <ForbiddenState message="You don't have permission to view responses." />
+    );
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-2">

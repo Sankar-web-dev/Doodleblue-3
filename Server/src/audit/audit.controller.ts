@@ -18,7 +18,7 @@ export class AuditController {
   constructor(private readonly audit: AuditService) {}
 
   @Get()
-  @RequirePermission('users', 'read')
+  @RequirePermission('audit', 'read')
   async list(@Query() query: ListAuditLogsQueryDto) {
     const { data, meta } = await this.audit.list(query);
     return { data, meta };

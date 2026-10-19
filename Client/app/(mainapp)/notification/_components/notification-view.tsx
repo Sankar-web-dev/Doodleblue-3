@@ -37,7 +37,8 @@ export function NotificationView({ requestId }: NotificationViewProps) {
     retry: false,
   });
 
-  const isDonor = (user?.role ?? "").toLowerCase().includes("dona");
+  const roleLower = (user?.role ?? "").toLowerCase();
+  const isDonor = roleLower.includes("dona") || roleLower.includes("donor");
   const acceptingResponses =
     request?.status === "OPEN" || request?.status === "PARTIALLY_FULFILLED";
 

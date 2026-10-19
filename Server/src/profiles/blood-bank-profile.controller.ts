@@ -33,7 +33,7 @@ export class BloodBankProfileController {
 
   /** Admin directory of all registered institutions. */
   @Get()
-  @RequirePermission('users', 'read')
+  @RequirePermission('profiles', 'read')
   async list(@Query() query: ListBloodBanksQueryDto) {
     const { data, meta } = await this.profiles.list(query);
     return { data, meta };
@@ -59,13 +59,13 @@ export class BloodBankProfileController {
   }
 
   @Get('user/:userId')
-  @RequirePermission('users', 'read')
+  @RequirePermission('profiles', 'read')
   async getForUser(@Param('userId', ParseUUIDPipe) userId: string) {
     return { data: { profile: await this.profiles.getForUser(userId) } };
   }
 
   @Put('user/:userId')
-  @RequirePermission('users', 'update')
+  @RequirePermission('profiles', 'update')
   async upsertForUser(
     @Param('userId', ParseUUIDPipe) userId: string,
     @Body() dto: UpsertBloodBankProfileDto,
@@ -77,7 +77,7 @@ export class BloodBankProfileController {
 
   /** Approve / reject / suspend an institution's verification. */
   @Patch(':id/verification')
-  @RequirePermission('users', 'update')
+  @RequirePermission('profiles', 'update')
   async verify(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: VerifyBloodBankDto,

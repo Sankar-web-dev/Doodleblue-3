@@ -1,13 +1,29 @@
 import { useCallback } from "react";
 import type { AuthUser, RolePermission } from "@/api/auth.api";
 
-export type Resource = "roles" | "users";
+export type Resource =
+  | "roles"
+  | "users"
+  | "profiles"
+  | "requests"
+  | "responses"
+  | "donations"
+  | "appointments"
+  | "notifications"
+  | "audit";
 
 export type Action = "create" | "read" | "update" | "delete";
 
 export const RESOURCE_LABELS: Record<Resource, string> = {
   roles: "Roles",
   users: "Users",
+  profiles: "Profiles",
+  requests: "Blood Requests",
+  responses: "Donor Responses",
+  donations: "Donations",
+  appointments: "Appointments",
+  notifications: "Notifications",
+  audit: "Audit Logs",
 };
 
 export const ACTION_LABELS: Record<Action, string> = {
@@ -17,7 +33,17 @@ export const ACTION_LABELS: Record<Action, string> = {
   delete: "Delete",
 };
 
-export const ALL_RESOURCES: Resource[] = ["roles", "users"];
+export const ALL_RESOURCES: Resource[] = [
+  "roles",
+  "users",
+  "profiles",
+  "requests",
+  "responses",
+  "donations",
+  "appointments",
+  "notifications",
+  "audit",
+];
 
 export const ALL_ACTIONS: Action[] = ["create", "read", "update", "delete"];
 

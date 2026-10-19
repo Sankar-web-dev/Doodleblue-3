@@ -21,6 +21,8 @@ import {
 
 import { Donation, donationsApi, MY_DONATIONS_KEY } from "@/api/donations.api";
 import { useAuthUser } from "@/lib/use-auth-user";
+import { usePermissions } from "@/lib/permissions";
+import { ForbiddenState } from "../../_components/forbidden-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -40,7 +42,8 @@ function formatDate(iso?: string | null) {
 }
 
 export function DonationsView() {
-  const { user } = useAuthUser();
+  const { user, isPending: userPending } = useAuthUser();
+  const { can } = usePermissions(user);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [selectedCertificate, setSelectedCertificate] = useState<Donation | null>(null);
@@ -122,6 +125,13 @@ export function DonationsView() {
       );
     });
   }, [uniqueDonations, search, statusFilter]);
+
+  if (userPending) return null;
+  if (!can("donations", "read")) {
+    return (
+      <ForbiddenState message="You don't have permission to view donations." />
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -84,7 +84,7 @@ export class AppointmentsService {
       // Only the request owner or an admin may schedule for a donor.
       if (
         request.createdByUserId !== user.id &&
-        !hasPermission(user, role, 'users', 'update')
+        !hasPermission(user, role, 'appointments', 'update')
       ) {
         throw new ApiException(
           403,
@@ -240,7 +240,7 @@ export class AppointmentsService {
     }
     if (
       request.createdByUserId !== user.id &&
-      !hasPermission(user, role, 'users', 'read')
+      !hasPermission(user, role, 'appointments', 'read')
     ) {
       throw new ApiException(
         403,
@@ -332,7 +332,7 @@ export class AppointmentsService {
     if (
       appointment.donor.userId === user.id ||
       appointment.request.createdByUserId === user.id ||
-      hasPermission(user, role, 'users', 'update')
+      hasPermission(user, role, 'appointments', 'update')
     ) {
       return;
     }

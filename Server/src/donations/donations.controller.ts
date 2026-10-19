@@ -50,7 +50,7 @@ export class DonationsController {
   }
 
   @Get()
-  @RequirePermission('users', 'read')
+  @RequirePermission('donations', 'read')
   async listAll(@Query() query: ListDonationsQueryDto) {
     const { data, meta } = await this.donations.listAll(query);
     return { data, meta };
@@ -97,7 +97,7 @@ export class DonationsController {
 
   /** Admin verification stamp on a completed donation. */
   @Patch(':id/verify')
-  @RequirePermission('users', 'update')
+  @RequirePermission('donations', 'update')
   async verify(
     @Param('id', ParseUUIDPipe) id: string,
     @Req() req: AuthenticatedRequest,
@@ -146,7 +146,7 @@ export class DonationsController {
 
   /** Clinical review — staff only (users:update). */
   @Patch(':id/screening/review')
-  @RequirePermission('users', 'update')
+  @RequirePermission('donations', 'update')
   async reviewScreening(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ReviewScreeningDto,

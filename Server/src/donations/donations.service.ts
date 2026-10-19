@@ -68,7 +68,7 @@ export class DonationsService {
   ) {
     let donorProfileId = dto.donorProfileId;
     if (donorProfileId) {
-      if (!hasPermission(user, role, 'users', 'update')) {
+      if (!hasPermission(user, role, 'donations', 'update')) {
         throw new ApiException(
           403,
           'FORBIDDEN',
@@ -309,7 +309,7 @@ export class DonationsService {
     user: UserModel,
     role: RoleModel | null,
   ) {
-    if (!hasPermission(user, role, 'users', 'update')) {
+    if (!hasPermission(user, role, 'donations', 'update')) {
       throw new ApiException(
         403,
         'FORBIDDEN',
@@ -380,7 +380,7 @@ export class DonationsService {
   ) {
     if (
       donation.donor.userId === user.id ||
-      hasPermission(user, role, 'users', 'update')
+      hasPermission(user, role, 'donations', 'update')
     ) {
       return;
     }
@@ -398,7 +398,7 @@ export class DonationsService {
   ) {
     if (
       donation.donor.userId === user.id ||
-      hasPermission(user, role, 'users', 'read')
+      hasPermission(user, role, 'donations', 'read')
     ) {
       return;
     }

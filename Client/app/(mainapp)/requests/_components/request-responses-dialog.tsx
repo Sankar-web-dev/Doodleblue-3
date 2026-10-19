@@ -23,6 +23,8 @@ import {
 import { appointmentsApi } from "@/api/appointments.api";
 import { requestsApi, REQUESTS_LIST_KEY } from "@/api/requests.api";
 import { ApiRequestError } from "@/lib/api";
+import { useAuthUser } from "@/lib/use-auth-user";
+import { usePermissions } from "@/lib/permissions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AppDialog } from "@/components/ui/dialog";
@@ -79,6 +81,8 @@ export function RequestResponsesDialog({
   const queryClient = useQueryClient();
   const [confirming, setConfirming] = useState<DonorResponse | null>(null);
   const [unitsReceived, setUnitsReceived] = useState<number>(1);
+  const { user } = useAuthUser();
+  const { can } = usePermissions(user);
 
   // Fetch the request details to display real-time fulfillment progress
   const { data: requestRes } = useQuery({
@@ -332,7 +336,7 @@ export function RequestResponsesDialog({
                 </div>
 
                 <div className="flex flex-wrap items-center gap-1.5 sm:shrink-0">
-                  {(r.status === "INTERESTED" || r.status === "CONTACTED") && (
+                  {(r.status === "INTERESTED" || r.status === "CONTACTED") && can("appointments", "create") && (
                     <Button
                       size="sm"
                       variant="outline"
@@ -348,6 +352,7 @@ export function RequestResponsesDialog({
                     </Button>
                   )}
                   {r.status === "APPOINTMENT_SCHEDULED" &&
+                    can("appointments", "update") &&
                     appointmentByDonor.get(r.donorProfileId) && (
                       <Button
                         size="sm"
@@ -363,7 +368,7 @@ export function RequestResponsesDialog({
                         </Link>
                       </Button>
                     )}
-                  {next && (
+                  {next && can("responses", "update") && (
                     <Button
                       size="sm"
                       variant="outline"
@@ -376,7 +381,7 @@ export function RequestResponsesDialog({
                       {next.label}
                     </Button>
                   )}
-                  {canReceive && (
+                  {canReceive && can("responses", "update") && (
                     <Button
                       size="sm"
                       className="h-8 gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"

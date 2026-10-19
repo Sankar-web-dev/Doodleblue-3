@@ -44,13 +44,13 @@ export class PersonalProfileController {
   }
 
   @Get('user/:userId')
-  @RequirePermission('users', 'read')
+  @RequirePermission('profiles', 'read')
   async getForUser(@Param('userId', ParseUUIDPipe) userId: string) {
     return { data: { profile: await this.profiles.getForUser(userId) } };
   }
 
   @Put('user/:userId')
-  @RequirePermission('users', 'update')
+  @RequirePermission('profiles', 'update')
   async upsertForUser(
     @Param('userId', ParseUUIDPipe) userId: string,
     @Body() dto: UpsertPersonalProfileDto,

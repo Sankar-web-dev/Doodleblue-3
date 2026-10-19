@@ -151,7 +151,7 @@ export function BloodBanksView() {
   );
 
   if (userPending) return null;
-  if (!can("users", "read")) {
+  if (!can("profiles", "read")) {
     return (
       <ForbiddenState message="You don't have permission to view blood banks." />
     );
@@ -231,7 +231,7 @@ export function BloodBanksView() {
       {/* Details + verification sheet */}
       <BloodBankDetailsSheet
         bank={viewBank}
-        canVerify={can("users", "update")}
+        canVerify={can("profiles", "update")}
         onClose={() => setViewBankId(null)}
         onVerify={(target) => setVerifyTarget(target)}
       />

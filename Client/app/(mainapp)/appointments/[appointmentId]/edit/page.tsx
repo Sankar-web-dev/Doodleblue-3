@@ -1,3 +1,4 @@
+import { RequirePermission } from "../../../_components/require-permission";
 import { EditAppointmentView } from "../../_components/edit-appointment-view";
 
 interface EditAppointmentPageProps {
@@ -15,10 +16,16 @@ export default async function EditAppointmentPage({
     Array.isArray(v) ? v[0] : v;
 
   return (
-    <EditAppointmentView
-      appointmentId={appointmentId}
-      requestId={str(sp.request) ?? ""}
-      donorName={str(sp.name) ?? ""}
-    />
+    <RequirePermission
+      resource="appointments"
+      action="update"
+      message="You don't have permission to reschedule appointments."
+    >
+      <EditAppointmentView
+        appointmentId={appointmentId}
+        requestId={str(sp.request) ?? ""}
+        donorName={str(sp.name) ?? ""}
+      />
+    </RequirePermission>
   );
 }

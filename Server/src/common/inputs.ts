@@ -1,6 +1,7 @@
 import { ApiException } from './api-error.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { hasPermission } from '../auth/permissions.guard.js';
+import type { Resource } from './constants.js';
 import type { RoleModel, UserModel } from '../generated/prisma/models.js';
 
 /** Ensures the target user exists before admin profile operations. */
@@ -79,14 +80,15 @@ export function assertDonorCanDonate(donor: {
   }
 }
 
-/** Owner or a role holding users:update can manage the record. */
+/** Owner or a role holding <resource>:update can manage the record. */
 export function assertOwnerOrUsersUpdate(
   user: UserModel,
   role: RoleModel | null | undefined,
   ownerUserId: string | null | undefined,
+  resource: Resource = 'users',
 ): void {
   if (user.id === ownerUserId) return;
-  if (hasPermission(user, role, 'users', 'update')) return;
+  if (hasPermission(user, role, resource, 'update')) return;
   throw new ApiException(
     403,
     'FORBIDDEN',
