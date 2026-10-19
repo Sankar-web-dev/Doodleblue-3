@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -299,7 +300,7 @@ export function RespondView({ requestId }: RespondViewProps) {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 px-4 py-8">
+    <div className="mx-auto max-w-5xl space-y-6 px-4 py-8">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" asChild>
           <Link href={`/notification/${requestId}`}>
@@ -317,7 +318,37 @@ export function RespondView({ requestId }: RespondViewProps) {
           </p>
         </div>
       </div>
-      {body}
+
+      <div className="grid items-stretch gap-6 lg:grid-cols-2">
+        <div>{body}</div>
+
+        {/* Donation art card — stretches to match the form card's height */}
+        <Card className="hidden overflow-hidden border-border/80 shadow-xs lg:flex lg:flex-col lg:sticky lg:top-6">
+          <div className="relative min-h-72 flex-1">
+            <Image
+              src="/responding.jpg"
+              alt="Blood bags for groups A, AB, B and O, and a donor's arm connected to a heart"
+              fill
+              sizes="(min-width: 1024px) 40rem, 100vw"
+              className="object-cover"
+            />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
+          </div>
+          <CardContent className="flex items-center gap-3 p-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <HeartHandshake className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                One donation. Three lives.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Every drop counts.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

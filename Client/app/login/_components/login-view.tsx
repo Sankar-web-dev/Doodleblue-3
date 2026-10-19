@@ -1,25 +1,14 @@
 import Link from "next/link";
 import { Droplet } from "lucide-react";
 
-import { AuthBrandPanel } from "@/app/_components/auth-brand-panel";
-import { FEATURES } from "../_lib/constants";
+import { LoginBrandPanel } from "./login-brand-panel";
 import { LoginForm } from "./login-form";
 
 /** Full login screen — brand panel + form panel layout. */
 export function LoginView() {
   return (
     <div className="flex min-h-screen w-full bg-background">
-      <AuthBrandPanel
-        headline={
-          <>
-            Every drop
-            <br />
-            <span className="text-[oklch(0.78_0.19_25)]">counts.</span>
-          </>
-        }
-        subtitle="The admin console for your blood donation platform — users, roles and permissions, all in one place."
-        features={FEATURES}
-      />
+      <LoginBrandPanel />
 
       {/* Form panel */}
       <main className="relative flex flex-1 items-center justify-center bg-ambient-mesh px-4 py-10 sm:px-8">
