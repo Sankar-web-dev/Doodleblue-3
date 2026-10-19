@@ -3,6 +3,7 @@
 import { Controller, useFormContext } from "react-hook-form";
 import { Activity } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { DatePicker, todayDateValue } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -103,7 +104,19 @@ export function StepMedicalScreening() {
           <Label htmlFor="tattooDate" className={detailLabel}>
             Date Tattoo/Piercing was performed:
           </Label>
-          <Input id="tattooDate" type="date" {...register("tattooDate")} />
+          <Controller
+            name="tattooDate"
+            control={control}
+            render={({ field }) => (
+              <DatePicker
+                id="tattooDate"
+                value={field.value}
+                onChange={field.onChange}
+                maxDate={todayDateValue()}
+                placeholder="Select date"
+              />
+            )}
+          />
         </div>
       </YesNoField>
 
@@ -118,10 +131,18 @@ export function StepMedicalScreening() {
           <Label htmlFor="lastSurgeryDate" className={detailLabel}>
             Date of last surgery:
           </Label>
-          <Input
-            id="lastSurgeryDate"
-            type="date"
-            {...register("lastSurgeryDate")}
+          <Controller
+            name="lastSurgeryDate"
+            control={control}
+            render={({ field }) => (
+              <DatePicker
+                id="lastSurgeryDate"
+                value={field.value}
+                onChange={field.onChange}
+                maxDate={todayDateValue()}
+                placeholder="Select date"
+              />
+            )}
           />
         </div>
       </YesNoField>

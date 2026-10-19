@@ -1,8 +1,9 @@
 "use client";
 
 import { Controller, useFormContext, useWatch } from "react-hook-form";
-import { Calendar, MapPin, Phone, User } from "lucide-react";
+import { MapPin, Phone, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { DatePicker, todayDateValue } from "@/components/ui/date-picker";
 import { AddressMapPicker } from "@/components/location/address-map-picker";
 import {
   Select,
@@ -55,11 +56,18 @@ export function StepPersonalDetails() {
             )
           }
         >
-          <IconInput
-            icon={Calendar}
-            id="dateOfBirth"
-            type="date"
-            {...register("dateOfBirth")}
+          <Controller
+            name="dateOfBirth"
+            control={control}
+            render={({ field }) => (
+              <DatePicker
+                id="dateOfBirth"
+                value={field.value}
+                onChange={field.onChange}
+                maxDate={todayDateValue()}
+                placeholder="Select birth date"
+              />
+            )}
           />
         </FormField>
 

@@ -1,13 +1,13 @@
 "use client";
 
 import { FormProvider } from "react-hook-form";
-import { Loader2 } from "lucide-react";
+import { HeartHandshake, Loader2 } from "lucide-react";
 
 import { useRecipientOnboarding } from "../_hooks/use-recipient-onboarding";
 import { ONBOARDING_STEPS } from "../_lib/constants";
-import { OnboardingHeader } from "./onboarding-header";
-import { OnboardingStepper } from "./onboarding-stepper";
-import { StepNavigation } from "./step-navigation";
+import { OnboardingHeader } from "../../_components/onboarding-header";
+import { OnboardingStepper } from "../../_components/onboarding-stepper";
+import { StepNavigation } from "../../_components/step-navigation";
 import { StepPersonalDetails } from "./steps/step-personal-details";
 import { StepRegistrationContext } from "./steps/step-registration-context";
 import { StepReviewConfirm } from "./steps/step-review-confirm";
@@ -37,7 +37,16 @@ export function RecipientOnboardingWizard() {
   return (
     <div className="min-h-screen bg-ambient-mesh px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl space-y-8">
-        <OnboardingHeader isUpdateMode={isUpdateMode} />
+        <OnboardingHeader
+          icon={HeartHandshake}
+          title="Blood Recipient Onboarding"
+          updateTitle="Update Recipient Details"
+          badge="Role: Blood Recipient"
+          updateBadge="Update Mode"
+          description="Complete your registration to create blood requests & get matched with donors."
+          updateDescription="Edit and review your registration context and contact details."
+          isUpdateMode={isUpdateMode}
+        />
 
         <OnboardingStepper
           steps={ONBOARDING_STEPS}
@@ -63,6 +72,8 @@ export function RecipientOnboardingWizard() {
                 currentStep={currentStep}
                 totalSteps={totalSteps}
                 isUpdateMode={isUpdateMode}
+                reviewLabel="Review & Confirm"
+                updateReviewLabel="Review & Update"
                 onPrev={handlePrevStep}
                 onNext={handleNextStep}
               />

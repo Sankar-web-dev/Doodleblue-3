@@ -19,6 +19,7 @@ import { ApiRequestError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 
 interface EditAppointmentViewProps {
@@ -179,11 +180,12 @@ export function EditAppointmentView({
               <CalendarClock className="h-3.5 w-3.5" />
               Date &amp; time
             </Label>
-            <Input
+            <DatePicker
               id="scheduled-at"
-              type="datetime-local"
+              includeTime
               value={scheduledAt}
-              onChange={(e) => setScheduledAt(e.target.value)}
+              onChange={setScheduledAt}
+              placeholder="Select date & time"
             />
           </div>
 
