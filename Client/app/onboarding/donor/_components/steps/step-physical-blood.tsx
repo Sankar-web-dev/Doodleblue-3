@@ -1,8 +1,9 @@
 "use client";
 
-import { useFormContext } from "react-hook-form";
+import { Controller, useFormContext } from "react-hook-form";
 import { AlertTriangle, Droplet, Scale } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { DatePicker, todayDateValue } from "@/components/ui/date-picker";
 import type { DonorOnboardingFormValues } from "../../_lib/donor-onboarding.schema";
 import { StepCard } from "../../../_components/step-card";
 import { FormField } from "../../../_components/form-field";
@@ -14,6 +15,7 @@ import { BloodGroupPicker } from "../blood-group-picker";
 export function StepPhysicalBlood() {
   const {
     register,
+    control,
     watch,
     setValue,
     formState: { errors },
@@ -119,10 +121,18 @@ export function StepPhysicalBlood() {
               htmlFor="lastDonationDate"
               variant="subtle"
             >
-              <Input
-                id="lastDonationDate"
-                type="date"
-                {...register("lastDonationDate")}
+              <Controller
+                name="lastDonationDate"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    id="lastDonationDate"
+                    value={field.value}
+                    onChange={field.onChange}
+                    maxDate={todayDateValue()}
+                    placeholder="Select date"
+                  />
+                )}
               />
             </FormField>
           </div>

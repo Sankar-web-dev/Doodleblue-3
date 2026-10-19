@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input, FieldError } from "@/components/ui/input";
+import { DatePicker, todayDateValue } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -427,7 +428,19 @@ export function RequestForm({
             >
               Required By
             </Label>
-            <Input id="requiredBy" type="date" {...register("requiredBy")} />
+            <Controller
+              name="requiredBy"
+              control={control}
+              render={({ field }) => (
+                <DatePicker
+                  id="requiredBy"
+                  value={field.value}
+                  onChange={field.onChange}
+                  minDate={todayDateValue()}
+                  placeholder="Select required-by date"
+                />
+              )}
+            />
             <FieldError message={err("requiredBy")} />
           </div>
 
@@ -438,7 +451,19 @@ export function RequestForm({
             >
               Request Expires On
             </Label>
-            <Input id="expiresAt" type="date" {...register("expiresAt")} />
+            <Controller
+              name="expiresAt"
+              control={control}
+              render={({ field }) => (
+                <DatePicker
+                  id="expiresAt"
+                  value={field.value}
+                  onChange={field.onChange}
+                  minDate={todayDateValue()}
+                  placeholder="Select expiry date"
+                />
+              )}
+            />
             <FieldError message={err("expiresAt")} />
           </div>
         </CardContent>

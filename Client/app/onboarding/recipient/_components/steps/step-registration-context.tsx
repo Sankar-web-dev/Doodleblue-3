@@ -6,9 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { RecipientOnboardingFormValues } from "../../_lib/recipient-onboarding.schema";
-import { StepCard } from "../step-card";
-import { FormField } from "../form-field";
-import { InfoBox } from "../info-box";
+import { StepCard } from "../../../_components/step-card";
+import { FormField } from "../../../_components/form-field";
+import { InfoBox } from "../../../_components/info-box";
 
 const REGISTRATION_OPTIONS = [
   {

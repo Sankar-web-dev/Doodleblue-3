@@ -1,8 +1,9 @@
 "use client";
 
-import { useFormContext } from "react-hook-form";
+import { Controller, useFormContext } from "react-hook-form";
 import { CheckCircle2, Heart, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { DatePicker, todayDateValue } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import type { DonorOnboardingFormValues } from "../../_lib/donor-onboarding.schema";
 import { StepCard } from "../../../_components/step-card";
@@ -17,7 +18,7 @@ const WELLNESS_ITEMS = [
 
 /** Step 4 — Gender Screening & Clinical Safety. */
 export function StepGenderScreening() {
-  const { register, watch, setValue } =
+  const { register, control, watch, setValue } =
     useFormContext<DonorOnboardingFormValues>();
   const gender = watch("gender");
   const currentlyPregnant = watch("currentlyPregnant");
@@ -58,10 +59,18 @@ export function StepGenderScreening() {
               >
                 Date of delivery or miscarriage:
               </Label>
-              <Input
-                id="lastPregnancyDate"
-                type="date"
-                {...register("lastPregnancyDate")}
+              <Controller
+                name="lastPregnancyDate"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    id="lastPregnancyDate"
+                    value={field.value}
+                    onChange={field.onChange}
+                    maxDate={todayDateValue()}
+                    placeholder="Select date"
+                  />
+                )}
               />
             </div>
           </YesNoField>
