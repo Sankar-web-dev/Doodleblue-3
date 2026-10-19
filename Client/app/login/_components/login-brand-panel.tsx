@@ -15,6 +15,7 @@ export function LoginBrandPanel() {
           alt=""
           fill
           priority
+          sizes="(min-width: 1024px) 60vw, 100vw"
           className="animate-float scale-110 object-cover"
         />
       </div>
