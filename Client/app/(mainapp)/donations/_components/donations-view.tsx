@@ -412,6 +412,12 @@ export function DonationsView() {
                       variant="outline"
                       size="sm"
                       className="h-8 gap-1.5 text-xs text-primary hover:text-primary"
+                      disabled={!isCompleted}
+                      title={
+                        isCompleted
+                          ? undefined
+                          : "Certificate unlocks once the donation is completed"
+                      }
                       onClick={() => setSelectedCertificate(donation)}
                     >
                       <Award className="h-3.5 w-3.5 text-amber-500" />

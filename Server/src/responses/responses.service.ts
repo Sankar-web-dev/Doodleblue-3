@@ -122,6 +122,18 @@ export class ResponsesService {
       include: RESPONSE_INCLUDE,
     });
 
+    // Carry the pledge onto any in-progress donation record (e.g. one
+    // created at screening time) so it reflects the offered units until
+    // the actual donation is completed.
+    await this.prisma.donation.updateMany({
+      where: {
+        requestId: dto.requestId,
+        donorProfileId: donor.id,
+        status: { not: 'COMPLETED' },
+      },
+      data: { unitsDonated: dto.unitsOffered ?? 1 },
+    });
+
     // Notify request creator (Recipient or Blood Bank)
     if (request.createdByUserId && request.createdByUserId !== user.id) {
       const group = BLOOD_GROUP_LABELS[request.bloodGroup] ?? request.bloodGroup;
@@ -315,6 +327,18 @@ export class ResponsesService {
         },
         include: RESPONSE_INCLUDE,
       });
+
+      // Keep in-progress donation records in step with the pledge.
+      if (!completing && dto.unitsOffered !== undefined) {
+        await tx.donation.updateMany({
+          where: {
+            requestId: response.requestId,
+            donorProfileId: response.donorProfileId,
+            status: { not: 'COMPLETED' },
+          },
+          data: { unitsDonated: dto.unitsOffered },
+        });
+      }
 
       if (completing) {
         // 1. Create or update Donation record without duplicates

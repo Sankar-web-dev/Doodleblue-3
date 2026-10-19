@@ -113,6 +113,18 @@ export class DonationsService {
       return existing;
     }
 
+    // Default the units to what the donor offered in their response, so
+    // in-progress records show the pledge rather than a hard-coded 1.
+    const response = await this.prisma.donorResponse.findUnique({
+      where: {
+        requestId_donorProfileId: {
+          requestId: dto.requestId,
+          donorProfileId,
+        },
+      },
+      select: { unitsOffered: true },
+    });
+
     return this.prisma.donation.create({
       data: {
         requestId: dto.requestId,
@@ -120,7 +132,7 @@ export class DonationsService {
         donationDate: toDateInput(dto.donationDate) ?? undefined,
         collectionLocation: dto.collectionLocation,
         notes: dto.notes,
-        unitsDonated: dto.unitsDonated ?? 1,
+        unitsDonated: dto.unitsDonated ?? response?.unitsOffered ?? 1,
       },
       include: DONATION_INCLUDE,
     });
