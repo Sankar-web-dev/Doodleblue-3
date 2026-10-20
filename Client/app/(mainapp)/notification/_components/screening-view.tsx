@@ -3,10 +3,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   ArrowLeft,
+  CheckCircle2,
   Clock,
   ClipboardCheck,
   HeartPulse,
@@ -72,6 +73,7 @@ export function ScreeningView({ requestId }: ScreeningViewProps) {
   const [submitted, setSubmitted] = useState(false);
   const [prefilled, setPrefilled] = useState(false);
   const [ineligible, setIneligible] = useState(false);
+  const queryClient = useQueryClient();
 
   const requestQuery = useQuery({
     queryKey: ["requests", requestId],
@@ -143,10 +145,18 @@ export function ScreeningView({ requestId }: ScreeningViewProps) {
         const res = await donationsApi.registerDonation({ requestId });
         donationId = res.donation.id;
       }
-      await donationsApi.upsertScreening(donationId, {
+      const res = await donationsApi.upsertScreening(donationId, {
         ...answers,
         additionalNotes: notes.trim() || undefined,
       });
+      // Push the saved screening into the cache so the respond page sees it
+      // immediately — otherwise the 30s staleTime keeps showing the gate.
+      queryClient.setQueryData(
+        ["donations", donationId, "screening"],
+        res
+      );
+      // The donations list may not contain the just-registered donation yet.
+      await queryClient.invalidateQueries({ queryKey: MY_DONATIONS_KEY });
       setSubmitted(true);
       setIneligible(anyRisk);
       if (anyRisk) {
@@ -193,12 +203,12 @@ export function ScreeningView({ requestId }: ScreeningViewProps) {
       <div className="grid gap-10 md:grid-cols-[1.15fr_0.85fr]">
         <div className="space-y-6">
       {loading ? (
-        <div className="flex min-h-[40vh] items-center justify-center">
+        <div className="flex h-full min-h-[40vh] items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : !donorProfile || !donorProfile.profileCompleted ? (
-        <Card className="border-border/80 shadow-xs">
-          <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
+        <Card className="h-full border-border/80 shadow-xs">
+          <CardContent className="flex h-full flex-col items-center justify-center gap-3 py-10 text-center">
             <ShieldAlert className="h-10 w-10 text-amber-500" />
             <p className="text-sm font-medium">
               Complete your donor onboarding before screening.
@@ -209,8 +219,8 @@ export function ScreeningView({ requestId }: ScreeningViewProps) {
           </CardContent>
         </Card>
       ) : submitted ? (
-        <Card className="border-border/80 shadow-xs">
-          <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
+        <Card className="h-full border-border/80 shadow-xs">
+          <CardContent className="flex h-full flex-col items-center justify-center gap-4 py-10 text-center">
             {ineligible ? (
               <>
                 <span className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-500/15 text-amber-600">
@@ -246,12 +256,36 @@ export function ScreeningView({ requestId }: ScreeningViewProps) {
                   <ShieldCheck className="h-7 w-7" />
                 </span>
                 <div>
-                  <p className="text-lg font-semibold">Screening complete</p>
-                  <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+                  <p className="text-xl font-semibold">Screening complete</p>
+                  <p className="mx-auto mt-1 max-w-sm text-base text-muted-foreground">
                     You&apos;re eligible to donate. Continue to let the
                     institution know you can help.
                   </p>
                 </div>
+
+                <div className="w-full max-w-md rounded-xl border border-border/70 bg-muted/30 p-5 text-left">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    What happens next
+                  </p>
+                  <ul className="mt-2.5 space-y-2.5 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                      Your screening answers are saved to this donation
+                      request.
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                      Send your response — the institution will contact you to
+                      coordinate the donation.
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                      Once your donation is confirmed, your Life-Saving
+                      Certificate appears in My Donations.
+                    </li>
+                  </ul>
+                </div>
+
                 <div className="flex gap-3">
                   <Button variant="outline" asChild>
                     <Link href={`/notification/${requestId}`}>
@@ -269,7 +303,7 @@ export function ScreeningView({ requestId }: ScreeningViewProps) {
           </CardContent>
         </Card>
       ) : (
-        <Card className="border-border/80 shadow-xs">
+        <Card className="h-full border-border/80 shadow-xs">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
               <ClipboardCheck className="h-4 w-4 text-primary" />

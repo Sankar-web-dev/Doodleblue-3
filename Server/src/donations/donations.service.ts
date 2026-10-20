@@ -271,7 +271,7 @@ export class DonationsService {
         // Send certificate email to donor
         const donorUser = updated.donor?.user;
         if (donorUser?.email) {
-          const certificateUrl = `${process.env.CLIENT_URL ?? 'http://localhost:3000'}/donations/${updated.id}/certificate`;
+          const certificateUrl = `${process.env.CLIENT_URL ?? 'http://localhost:3000'}/donations?certificate=${updated.id}`;
           void this.mailer.sendCertificateEmail({
             to: donorUser.email,
             name: donorUser.name ?? 'Donor',

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -46,6 +46,7 @@ export function RespondView({ requestId }: RespondViewProps) {
   const [message, setMessage] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  const queryClient = useQueryClient();
 
   const requestQuery = useQuery({
     queryKey: ["requests", requestId],
@@ -115,6 +116,7 @@ export function RespondView({ requestId }: RespondViewProps) {
         message: message.trim() || undefined,
       }),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: MY_RESPONSES_KEY });
       toast.success("Response sent", {
         description:
           request?.requestType === "RECIPIENT"
@@ -144,6 +146,9 @@ export function RespondView({ requestId }: RespondViewProps) {
     requestQuery.isLoading ||
     profileQuery.isLoading ||
     donationsQuery.isLoading ||
+    // A refetch may be adding a just-registered donation — wait for it
+    // instead of flashing the "fill screening" gate.
+    (donationsQuery.isFetching && !donation) ||
     responsesQuery.isLoading ||
     screeningQuery.isLoading;
 
@@ -155,16 +160,18 @@ export function RespondView({ requestId }: RespondViewProps) {
     icon: React.ReactNode;
     title: string;
     body: string;
+    extra?: React.ReactNode;
     action?: { href: string; label: string };
   }) {
     return (
-      <Card className="border-border/80 shadow-xs">
-        <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
+      <Card className="h-full border-border/80 shadow-xs">
+        <CardContent className="flex h-full flex-col items-center justify-center gap-3 py-10 text-center">
           {opts.icon}
-          <p className="text-base font-semibold">{opts.title}</p>
-          <p className="mx-auto max-w-sm text-sm text-muted-foreground">
+          <p className="text-xl font-semibold">{opts.title}</p>
+          <p className="mx-auto max-w-md text-base text-muted-foreground">
             {opts.body}
           </p>
+          {opts.extra}
           <div className="flex gap-3">
             <Button variant="outline" asChild>
               <Link href={`/notification/${requestId}`}>Back to request</Link>
@@ -183,7 +190,7 @@ export function RespondView({ requestId }: RespondViewProps) {
   let body: React.ReactNode;
   if (loading) {
     body = (
-      <div className="flex min-h-[40vh] items-center justify-center">
+      <div className="flex h-full min-h-[40vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -218,12 +225,36 @@ export function RespondView({ requestId }: RespondViewProps) {
         request?.requestType === "RECIPIENT"
           ? "The recipient and their family have your response — they will contact you to coordinate the donation."
           : "The institution has your response — they'll contact you to schedule the donation.",
+      extra: (
+        <div className="w-full max-w-md rounded-xl border border-border/70 bg-muted/30 p-5 text-left">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            What happens next
+          </p>
+          <ul className="mt-2.5 space-y-2.5 text-sm text-muted-foreground">
+            <li className="flex items-start gap-2">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+              Your response is saved — track it anytime under My Responses.
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+              {request?.requestType === "RECIPIENT"
+                ? "The recipient's side reaches out to plan your visit."
+                : "The institution reaches out to schedule your visit."}
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+              After your donation is confirmed, your Life-Saving Certificate
+              appears in My Donations.
+            </li>
+          </ul>
+        </div>
+      ),
       action: { href: "/responses", label: "View my responses" },
     });
   } else {
     const isRecipientReq = request?.requestType === "RECIPIENT";
     body = (
-      <Card className="border-border/80 shadow-xs">
+      <Card className="h-full border-border/80 shadow-xs">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
             <HeartHandshake className="h-5 w-5 text-primary" />
