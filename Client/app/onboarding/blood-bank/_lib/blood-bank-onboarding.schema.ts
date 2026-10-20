@@ -3,8 +3,8 @@ import { z } from "zod";
 /** Place names: letters only, plus spaces, hyphens, apostrophes, dots. */
 const PLACE_NAME_REGEX = /^[A-Za-z][A-Za-z\s.'-]*$/;
 
-/** Phone: optional + prefix, digits only, 10–15 digits. */
-const PHONE_REGEX = /^\+?\d{10,15}$/;
+/** Phone: digits only, exactly 10. */
+const PHONE_REGEX = /^\d{10}$/;
 
 /**
  * Blood bank onboarding form schema — one shape shared by every wizard step.
@@ -20,7 +20,7 @@ export const bloodBankOnboardingSchema = z.object({
   hospitalPhone: z
     .string()
     .min(1, "Institution phone is required")
-    .regex(PHONE_REGEX, "Enter a valid phone number (10–15 digits)"),
+    .regex(PHONE_REGEX, "Enter a valid 10-digit phone number"),
   website: z
     .string()
     .max(200)
@@ -48,7 +48,7 @@ export const bloodBankOnboardingSchema = z.object({
   contactPhone: z
     .string()
     .min(1, "Contact phone is required")
-    .regex(PHONE_REGEX, "Enter a valid phone number (10–15 digits)"),
+    .regex(PHONE_REGEX, "Enter a valid 10-digit phone number"),
   officialEmail: z
     .string()
     .max(200)

@@ -25,7 +25,7 @@ export const donorOnboardingSchema = z.object({
   phoneNumber: z
     .string()
     .min(1, "Phone number is required")
-    .regex(/^\+?\d{10,15}$/, "Enter a valid phone number (10–15 digits)"),
+    .regex(/^\d{10}$/, "Enter a valid 10-digit phone number"),
   maritalStatus: z.enum(["SINGLE", "MARRIED", "DIVORCED", "WIDOWED", "OTHER"]),
   addressLine: z.string().max(200, "Address is too long"),
   city: z

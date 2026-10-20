@@ -153,8 +153,8 @@ export const bloodRequestFormSchema = z.object({
     .string()
     .optional()
     .refine(
-      (v) => !v || /^\+?\d{10,15}$/.test(v),
-      "Enter a valid phone number (10–15 digits)"
+      (v) => !v || /^\d{10}$/.test(v),
+      "Enter a valid 10-digit phone number"
     ),
   notes: z.string().max(1000, "Keep notes under 1000 characters").optional(),
 });
