@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+/** Place names: letters only, plus spaces, hyphens, apostrophes, dots. */
+const PLACE_NAME_REGEX = /^[A-Za-z][A-Za-z\s.'-]*$/;
+
+/** Phone: digits only, exactly 10. */
+const PHONE_REGEX = /^\d{10}$/;
+
 /**
  * Blood bank onboarding form schema — one shape shared by every wizard step.
  * Required fields mirror REQUIRED_ON_CREATE in the server's BloodBankProfileService.
@@ -14,8 +20,7 @@ export const bloodBankOnboardingSchema = z.object({
   hospitalPhone: z
     .string()
     .min(1, "Institution phone is required")
-    .min(10, "Enter at least 10 digits")
-    .max(20),
+    .regex(PHONE_REGEX, "Enter a valid 10-digit phone number"),
   website: z
     .string()
     .max(200)
@@ -23,13 +28,17 @@ export const bloodBankOnboardingSchema = z.object({
       (v) => !v || /^https?:\/\/.+\..+/.test(v),
       "Enter a valid URL (e.g. https://hospital.org)"
     ),
-  registrationNumber: z.string().max(120),
+  registrationNumber: z
+    .string()
+    .max(120)
+    .regex(/^[A-Za-z0-9/-]*$/, "Letters, numbers, / and - only"),
 
   // Step 2: Primary Contact
   contactPersonName: z
     .string()
     .min(1, "Contact person name is required")
-    .max(120),
+    .max(120)
+    .regex(PLACE_NAME_REGEX, "Letters only"),
   contactDesignation: z.enum([
     "ADMIN",
     "DOCTOR",
@@ -39,8 +48,7 @@ export const bloodBankOnboardingSchema = z.object({
   contactPhone: z
     .string()
     .min(1, "Contact phone is required")
-    .min(10, "Enter at least 10 digits")
-    .max(20),
+    .regex(PHONE_REGEX, "Enter a valid 10-digit phone number"),
   officialEmail: z
     .string()
     .max(200)
@@ -54,13 +62,22 @@ export const bloodBankOnboardingSchema = z.object({
     .string()
     .min(1, "Address is required")
     .max(200),
-  city: z.string().min(1, "City is required").max(120),
-  district: z.string().min(1, "District is required").max(120),
-  state: z.string().min(1, "State is required").max(120),
-  pincode: z
+  city: z
     .string()
-    .min(6, "Enter 6 digit pincode")
-    .max(10),
+    .min(1, "City is required")
+    .max(120)
+    .regex(PLACE_NAME_REGEX, "Letters only"),
+  district: z
+    .string()
+    .min(1, "District is required")
+    .max(120)
+    .regex(PLACE_NAME_REGEX, "Letters only"),
+  state: z
+    .string()
+    .min(1, "State is required")
+    .max(120)
+    .regex(PLACE_NAME_REGEX, "Letters only"),
+  pincode: z.string().regex(/^\d{6}$/, "Enter a valid 6-digit pincode"),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
 });

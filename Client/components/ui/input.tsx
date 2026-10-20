@@ -5,26 +5,111 @@ import { AlertCircle } from "lucide-react"
 import {
   useController,
   useFormContext,
+  useWatch,
   type FieldValues,
   type Path,
   type Control,
   type RegisterOptions,
+  type UseFormReturn,
 } from "react-hook-form"
 
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 
-const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, ...props }, ref) => {
+const INVALID_INPUT_CLASS =
+  "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/25"
+const VALID_INPUT_CLASS =
+  "border-green-600 focus-visible:border-green-600 focus-visible:ring-green-600/25"
+
+const BaseInput = React.forwardRef<
+  HTMLInputElement,
+  React.ComponentProps<"input">
+>(({ className, type, ...props }, ref) => {
+  return (
+    <input
+      type={type}
+      className={cn(
+        "flex h-9 w-full rounded-lg border border-input bg-card px-3 py-1 text-base shadow-2xs transition-all file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50 md:text-sm autofill:shadow-[inset_0_0_0_9999px_var(--card)] autofill:[-webkit-text-fill-color:var(--foreground)]",
+        className
+      )}
+      ref={ref}
+      {...props}
+    />
+  )
+})
+BaseInput.displayName = "BaseInput"
+
+interface BoundInputProps
+  extends Omit<React.ComponentProps<"input">, "name"> {
+  name: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  formApi: UseFormReturn<any>
+}
+
+/** Input wired to react-hook-form state — red on error, green on valid input. */
+const BoundInput = React.forwardRef<HTMLInputElement, BoundInputProps>(
+  ({ formApi, name, className, type, onFocus, onBlur, ...props }, ref) => {
+    const { control, getFieldState, formState } = formApi
+    const value = useWatch({ control, name })
+    const { invalid, isTouched, isDirty } = getFieldState(name, formState)
+    const [focused, setFocused] = React.useState(false)
+
+    const interacted = isTouched || isDirty
+    const hasError = invalid && (interacted || formState.isSubmitted)
+    const isValid =
+      !invalid &&
+      interacted &&
+      value !== undefined &&
+      value !== "" &&
+      focused
+
     return (
-      <input
-        type={type}
-        className={cn(
-          "flex h-9 w-full rounded-lg border border-input bg-card px-3 py-1 text-base shadow-2xs transition-all file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-          className
-        )}
-        ref={ref}
+      <BaseInput
         {...props}
+        ref={ref}
+        name={name}
+        type={type}
+        onFocus={(e) => {
+          setFocused(true)
+          onFocus?.(e)
+        }}
+        onBlur={(e) => {
+          setFocused(false)
+          onBlur?.(e)
+        }}
+        className={cn(
+          className,
+          hasError && INVALID_INPUT_CLASS,
+          isValid && !hasError && VALID_INPUT_CLASS
+        )}
+      />
+    )
+  }
+)
+BoundInput.displayName = "BoundInput"
+
+const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
+  (props, ref) => {
+    const formContext = useFormContext()
+    const { name, type, ...rest } = props
+
+    if (
+      !formContext ||
+      !name ||
+      type === "hidden" ||
+      type === "checkbox" ||
+      type === "radio"
+    ) {
+      return <BaseInput name={name} type={type} {...rest} ref={ref} />
+    }
+
+    return (
+      <BoundInput
+        name={name}
+        type={type}
+        formApi={formContext}
+        {...rest}
+        ref={ref}
       />
     )
   }
