@@ -20,6 +20,7 @@ import {
   UpdateDonationDto,
   UpsertScreeningDto,
 } from './dto.js';
+import { MailerService } from '../mail/mailer.service.js';
 
 const DONATION_INCLUDE = {
   request: {
@@ -45,7 +46,7 @@ const DONATION_INCLUDE = {
       id: true,
       bloodGroup: true,
       userId: true,
-      user: { select: { id: true, name: true, image: true } },
+      user: { select: { id: true, name: true, email: true, image: true } },
     },
   },
   verifiedBy: { select: { id: true, name: true } },
@@ -54,7 +55,10 @@ const DONATION_INCLUDE = {
 
 @Injectable()
 export class DonationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailer: MailerService,
+  ) {}
 
   /**
    * Register a donation against a request. Defaults to the caller's donor
@@ -263,6 +267,17 @@ export class DonationsService {
             donatedBefore: true,
           },
         });
+
+        // Send certificate email to donor
+        const donorUser = updated.donor?.user;
+        if (donorUser?.email) {
+          const certificateUrl = `${process.env.CLIENT_URL ?? 'http://localhost:3000'}/donations?certificate=${updated.id}`;
+          void this.mailer.sendCertificateEmail({
+            to: donorUser.email,
+            name: donorUser.name ?? 'Donor',
+            certificateUrl,
+          });
+        }
       }
 
       return updated;

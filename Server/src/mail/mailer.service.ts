@@ -79,4 +79,72 @@ export class MailerService {
     this.logger.log(`Credentials sent to ${opts.to} (id: ${data.id})`);
     return true;
   }
+  /**
+   * Sends a donation certificate email.
+   */
+  async sendCertificateEmail(opts: {
+    to: string;
+    name: string;
+    certificateUrl: string;
+  }): Promise<boolean> {
+    const client = this.getClient();
+    if (!client) {
+      this.logger.warn(`Resend not configured — could not send certificate to ${opts.to}`);
+      return false;
+    }
+    const { data, error } = await client.emails.send({
+      from: process.env.MAIL_FROM ?? 'DoodleBlue <no-reply@resend.dev>',
+      to: opts.to,
+      subject: 'Your Blood Donation Certificate',
+      html: `<div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:24px">
+        <h2 style="margin:0 0 8px">Congratulations ${opts.name}!</h2>
+        <p style="color:#555">Thank you for your generous blood donation. Your certificate is attached below.</p>
+        <a href="${opts.certificateUrl}" style="display:inline-block;background:#10b981;color:#fff;text-decoration:none;padding:10px 20px;border-radius:8px;font-weight:600">View Certificate</a>
+      </div>`,
+    });
+    if (error) {
+      this.logger.error(`Failed to send certificate to ${opts.to}: ${error.message}`);
+      return false;
+    }
+    this.logger.log(`Certificate email sent to ${opts.to} (id: ${data.id})`);
+    return true;
+  }
+
+  /**
+   * Sends an appointment confirmation email.
+   */
+  async sendAppointmentConfirmation(opts: {
+    to: string;
+    name: string;
+    appointmentDetails: {
+      date: string;
+      location?: string;
+      requestId: string;
+    };
+  }): Promise<boolean> {
+    const client = this.getClient();
+    if (!client) {
+      this.logger.warn(`Resend not configured — could not send appointment email to ${opts.to}`);
+      return false;
+    }
+    const when = opts.appointmentDetails.date;
+    const where = opts.appointmentDetails.location ? ` at ${opts.appointmentDetails.location}` : '';
+    const { data, error } = await client.emails.send({
+      from: process.env.MAIL_FROM ?? 'DoodleBlue <no-reply@resend.dev>',
+      to: opts.to,
+      subject: 'Your Donation Appointment is Confirmed',
+      html: `<div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:24px">
+        <h2 style="margin:0 0 8px">Hi ${opts.name},</h2>
+        <p style="color:#555">Your appointment has been confirmed for ${when}${where}.</p>
+        <p style="color:#555">You can view the request details <a href="${process.env.CLIENT_URL ?? 'http://localhost:3000'}/appointments/${opts.appointmentDetails.requestId}">here</a>.</p>
+      </div>`,
+    });
+    if (error) {
+      this.logger.error(`Failed to send appointment email to ${opts.to}: ${error.message}`);
+      return false;
+    }
+    this.logger.log(`Appointment confirmation sent to ${opts.to} (id: ${data.id})`);
+    return true;
+  }
+
 }

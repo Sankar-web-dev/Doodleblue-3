@@ -46,7 +46,12 @@ export function DonationsView() {
   const { can } = usePermissions(user);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [selectedCertificate, setSelectedCertificate] = useState<Donation | null>(null);
+  // Opened via ?certificate=<donationId> (email link) or the card's button.
+  const [selectedId, setSelectedId] = useState<string | null>(() =>
+    typeof window === "undefined"
+      ? null
+      : new URLSearchParams(window.location.search).get("certificate"),
+  );
 
   const { data, isPending, error } = useQuery({
     queryKey: MY_DONATIONS_KEY,
@@ -85,6 +90,11 @@ export function DonationsView() {
     }
     return Array.from(map.values());
   }, [data]);
+
+  const selectedCertificate = useMemo(() => {
+    const match = uniqueDonations.find((d) => d.id === selectedId);
+    return match?.status === "COMPLETED" ? match : null;
+  }, [uniqueDonations, selectedId]);
 
   // Aggregate impact metrics
   const completedDonations = useMemo(
@@ -418,7 +428,7 @@ export function DonationsView() {
                           ? undefined
                           : "Certificate unlocks once the donation is completed"
                       }
-                      onClick={() => setSelectedCertificate(donation)}
+                      onClick={() => setSelectedId(donation.id)}
                     >
                       <Award className="h-3.5 w-3.5 text-amber-500" />
                       Certificate
@@ -449,7 +459,7 @@ export function DonationsView() {
       <DonationCertificateDialog
         donation={selectedCertificate}
         donorName={user?.name ?? "Valued Donor"}
-        onClose={() => setSelectedCertificate(null)}
+        onClose={() => setSelectedId(null)}
       />
     </div>
   );

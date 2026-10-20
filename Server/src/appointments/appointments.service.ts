@@ -17,6 +17,8 @@ import {
   ListAppointmentsQueryDto,
   UpdateAppointmentDto,
 } from './dto.js';
+import { MailerService } from '../mail/mailer.service.js';
+
 
 const APPOINTMENT_INCLUDE = {
   request: {
@@ -33,7 +35,7 @@ const APPOINTMENT_INCLUDE = {
   donor: {
     select: {
       id: true,
-      user: { select: { id: true, name: true, image: true } },
+      user: { select: { id: true, name: true, email: true, image: true } },
     },
   },
   donation: { select: { id: true, status: true } },
@@ -41,7 +43,10 @@ const APPOINTMENT_INCLUDE = {
 
 @Injectable()
 export class AppointmentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailer: MailerService,
+  ) {}
 
   /**
    * Schedule a donation appointment — a donor books for themselves, or the
@@ -163,6 +168,20 @@ export class AppointmentsService {
           link: '/appointments',
         },
       });
+
+      // Send appointment confirmation email
+      const donorUser = appointment.donor?.user;
+      if (donorUser?.email) {
+        void this.mailer.sendAppointmentConfirmation({
+          to: donorUser.email,
+          name: donorUser.name ?? 'Donor',
+          appointmentDetails: {
+            date: when,
+            location: where ?? undefined,
+            requestId: dto.requestId,
+          },
+        });
+      }
 
       return appointment;
     });

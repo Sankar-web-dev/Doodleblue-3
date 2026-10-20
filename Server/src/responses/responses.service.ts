@@ -10,6 +10,7 @@ import {
   ListResponsesQueryDto,
   UpdateDonorResponseDto,
 } from './dto.js';
+import { MailerService } from '../mail/mailer.service.js';
 
 const BLOOD_GROUP_LABELS: Record<string, string> = {
   O_POSITIVE: 'O+',
@@ -58,7 +59,10 @@ const RESPONSE_INCLUDE = {
 
 @Injectable()
 export class ResponsesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailer: MailerService,
+  ) {}
 
   /**
    * A donor expresses interest in a blood request. Requires the caller's
@@ -265,7 +269,12 @@ export class ResponsesService {
             creator: { select: { name: true } },
           },
         },
-        donor: { select: { userId: true } },
+        donor: {
+          select: {
+            userId: true,
+            user: { select: { email: true, name: true } },
+          },
+        },
       },
     });
     if (!response) {
@@ -315,6 +324,7 @@ export class ResponsesService {
       unitsFulfilled: number;
       remaining: number;
     } | null = null;
+    let completedDonationId: string | null = null;
 
     const updated = await this.prisma.$transaction(async (tx) => {
       const resp = await tx.donorResponse.update({
@@ -352,6 +362,7 @@ export class ResponsesService {
 
         if (existingDonations.length > 0) {
           const primary = existingDonations[0];
+          completedDonationId = primary.id;
           await tx.donation.update({
             where: { id: primary.id },
             data: {
@@ -370,7 +381,7 @@ export class ResponsesService {
             });
           }
         } else {
-          await tx.donation.create({
+          const createdDonation = await tx.donation.create({
             data: {
               requestId: response.requestId,
               donorProfileId: response.donorProfileId,
@@ -382,6 +393,7 @@ export class ResponsesService {
               notes: response.message ? `Response: ${response.message}` : null,
             },
           });
+          completedDonationId = createdDonation.id;
         }
 
         // 2. Increment request unitsFulfilled and update request status
@@ -424,6 +436,19 @@ export class ResponsesService {
 
       return resp;
     });
+
+    // Email the donor once their certificate unlocks (donation completed)
+    if (completing && completedDonationId) {
+      const donorUser = response.donor.user;
+      if (donorUser?.email) {
+        const certificateUrl = `${process.env.CLIENT_URL ?? 'http://localhost:3000'}/donations?certificate=${completedDonationId}`;
+        void this.mailer.sendCertificateEmail({
+          to: donorUser.email,
+          name: donorUser.name ?? 'Donor',
+          certificateUrl,
+        });
+      }
+    }
 
     // Notify donor when request owner advances status
     if (isRequestOwner && dto.status && dto.status !== response.status) {
