@@ -9,6 +9,24 @@ import type {
   RequestType,
 } from "@/api/requests.api";
 
+/** Place names: letters only, plus spaces, hyphens, apostrophes, dots. */
+const PLACE_NAME_REGEX = /^[A-Za-z][A-Za-z\s.'-]*$/;
+
+/** Optional place name — empty allowed, else letters only. */
+const optionalPlaceNameSchema = z
+  .string()
+  .max(120)
+  .optional()
+  .refine((v) => !v || PLACE_NAME_REGEX.test(v), "Letters only");
+
+/** Required place name. */
+const placeNameSchema = (requiredMessage: string) =>
+  z
+    .string()
+    .min(1, requiredMessage)
+    .max(120)
+    .regex(PLACE_NAME_REGEX, "Letters only");
+
 // ---------------------------------------------------------------------------
 // Option lists — mirror the Prisma enums on the server.
 // ---------------------------------------------------------------------------
@@ -99,10 +117,16 @@ export const bloodRequestFormSchema = z.object({
     .min(1, "At least 1 unit")
     .max(50, "Maximum 50 units"),
   urgency: z.enum(["EMERGENCY", "WITHIN_24_HOURS", "SCHEDULED"]),
-  requiredBy: z.string().optional(),
-  expiresAt: z.string().optional(),
+  requiredBy: z
+    .string()
+    .optional()
+    .refine((v) => !v || /^\d{4}-\d{2}-\d{2}$/.test(v), "Invalid date"),
+  expiresAt: z
+    .string()
+    .optional()
+    .refine((v) => !v || /^\d{4}-\d{2}-\d{2}$/.test(v), "Invalid date"),
 
-  patientName: z.string().max(120).optional(),
+  patientName: optionalPlaceNameSchema,
   patientAge: z
     .number()
     .int("Whole years only")
@@ -114,15 +138,24 @@ export const bloodRequestFormSchema = z.object({
 
   hospitalName: z.string().max(200).optional(),
   hospitalAddress: z.string().max(300).optional(),
-  city: z.string().min(1, "City is required").max(120),
-  district: z.string().max(120).optional(),
-  state: z.string().min(1, "State is required").max(120),
-  pincode: z.string().max(10).optional(),
+  city: placeNameSchema("City is required"),
+  district: optionalPlaceNameSchema,
+  state: placeNameSchema("State is required"),
+  pincode: z
+    .string()
+    .optional()
+    .refine((v) => !v || /^\d{6}$/.test(v), "Enter a valid 6-digit pincode"),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
 
-  contactName: z.string().max(120).optional(),
-  contactPhone: z.string().max(20).optional(),
+  contactName: optionalPlaceNameSchema,
+  contactPhone: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || /^\+?\d{10,15}$/.test(v),
+      "Enter a valid phone number (10–15 digits)"
+    ),
   notes: z.string().max(1000, "Keep notes under 1000 characters").optional(),
 });
 

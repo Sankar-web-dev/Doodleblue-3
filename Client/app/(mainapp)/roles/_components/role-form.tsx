@@ -65,6 +65,7 @@ export function RoleForm({ role }: RoleFormProps) {
 
   const form = useForm<RoleFormValues>({
     resolver: zodResolver(roleSchema),
+    mode: "onChange",
     defaultValues: {
       name: role?.name ?? "",
       description: role?.description ?? "",

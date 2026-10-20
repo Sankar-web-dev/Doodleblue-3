@@ -75,6 +75,7 @@ export function RequestForm({
 
   const form = useForm<BloodRequestFormValues>({
     resolver: zodResolver(bloodRequestFormSchema),
+    mode: "onChange",
     defaultValues:
       defaultValues ?? {
         ...BLOOD_REQUEST_FORM_DEFAULTS,

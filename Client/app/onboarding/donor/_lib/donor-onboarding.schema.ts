@@ -1,4 +1,11 @@
 import { z } from "zod";
+import { calculateAge } from "./eligibility";
+
+/** Place names: letters only, plus spaces, hyphens, apostrophes, dots. */
+const PLACE_NAME_REGEX = /^[A-Za-z][A-Za-z\s.'-]*$/;
+
+/** ISO calendar date "YYYY-MM-DD". */
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
  * Donor onboarding form schema — one shape shared by every wizard step.
@@ -6,18 +13,36 @@ import { z } from "zod";
  */
 export const donorOnboardingSchema = z.object({
   // Step 1: Personal Details
-  dateOfBirth: z.string().min(1, "Birth date is required"),
+  dateOfBirth: z
+    .string()
+    .min(1, "Birth date is required")
+    .regex(DATE_REGEX, "Invalid date")
+    .refine(
+      (v) => calculateAge(v) >= 18 && calculateAge(v) <= 65,
+      "Donor must be between 18 and 65 years old"
+    ),
   gender: z.enum(["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"]),
   phoneNumber: z
     .string()
     .min(1, "Phone number is required")
-    .min(10, "Enter at least 10 digits"),
+    .regex(/^\+?\d{10,15}$/, "Enter a valid phone number (10–15 digits)"),
   maritalStatus: z.enum(["SINGLE", "MARRIED", "DIVORCED", "WIDOWED", "OTHER"]),
-  addressLine: z.string(),
-  city: z.string().min(1, "City is required"),
-  district: z.string(),
-  state: z.string().min(1, "State is required"),
-  pincode: z.string().min(6, "Enter 6 digit pincode"),
+  addressLine: z.string().max(200, "Address is too long"),
+  city: z
+    .string()
+    .min(1, "City is required")
+    .max(120)
+    .regex(PLACE_NAME_REGEX, "Letters only"),
+  district: z
+    .string()
+    .max(120)
+    .refine((v) => !v || PLACE_NAME_REGEX.test(v), "Letters only"),
+  state: z
+    .string()
+    .min(1, "State is required")
+    .max(120)
+    .regex(PLACE_NAME_REGEX, "Letters only"),
+  pincode: z.string().regex(/^\d{6}$/, "Enter a valid 6-digit pincode"),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
 
@@ -46,25 +71,37 @@ export const donorOnboardingSchema = z.object({
     .number({ error: "Enter a valid count" })
     .min(0)
     .max(100),
-  lastDonationDate: z.string(),
+  lastDonationDate: z
+    .string()
+    .refine((v) => !v || DATE_REGEX.test(v), "Invalid date"),
 
   // Step 3: Health History & Medical Screening
   hasSeriousMedicalCondition: z.boolean(),
-  medicalConditionDetails: z.string(),
+  medicalConditionDetails: z
+    .string()
+    .max(500, "Keep details under 500 characters"),
   hasDiabetes: z.boolean(),
   diabetesLevel: z.enum(["NONE", "CONTROLLED_DIET", "ORAL_MEDICATION", "INSULIN"]),
   takesMedication: z.boolean(),
-  medicationDetails: z.string(),
+  medicationDetails: z
+    .string()
+    .max(500, "Keep details under 500 characters"),
   hasHadSurgery: z.boolean(),
-  lastSurgeryDate: z.string(),
+  lastSurgeryDate: z
+    .string()
+    .refine((v) => !v || DATE_REGEX.test(v), "Invalid date"),
   hasTattoo: z.boolean(),
-  tattooDate: z.string(),
+  tattooDate: z
+    .string()
+    .refine((v) => !v || DATE_REGEX.test(v), "Invalid date"),
   regularAlcoholUse: z.boolean(),
 
   // Step 4: Gender Screening (Specific to Females)
   currentlyPregnant: z.boolean(),
   recentPregnancyOrDelivery: z.boolean(),
-  lastPregnancyDate: z.string(),
+  lastPregnancyDate: z
+    .string()
+    .refine((v) => !v || DATE_REGEX.test(v), "Invalid date"),
 
   // Step 5: Donation Preferences
   isAvailable: z.boolean(),
